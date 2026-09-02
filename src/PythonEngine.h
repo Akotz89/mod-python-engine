@@ -43,7 +43,7 @@ public:
     /**
      * @brief Loads and executes all Python scripts from the scripts directory
      */
-    void LoadScripts();
+    [[nodiscard]] bool LoadScripts();
 
     /**
      * @brief Clear all registered hooks with proper locking and GIL
@@ -131,6 +131,11 @@ public:
     [[nodiscard]] bool IsEnabled() const noexcept
     {
         return enabled.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] bool IsExecCommandAllowed() const noexcept
+    {
+        return allowExecCommand.load(std::memory_order_acquire);
     }
 
     /**
@@ -241,11 +246,13 @@ private:
 
     std::atomic<bool> enabled{false};
     std::atomic<bool> reloading{false};
+    std::atomic<bool> allowExecCommand{false};
     mutable std::shared_mutex hookMutex;
     inline static thread_local int triggerDepth = 0;
 
     HookRegistry hookMap;
     API::Object main_namespace;
+    PyThreadState* mainThreadState{nullptr};
 };
 
 extern PythonEngine* sPythonEngine;

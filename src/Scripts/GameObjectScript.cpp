@@ -52,7 +52,7 @@ public:
      */
     void OnDestroyed(GameObject* go, Player* player) override
     {
-        TRIGGER_GAMEOBJECT_HOOK(ON_REMOVE_WORLD, go->GetEntry(), go, player);
+        TRIGGER_GAMEOBJECT_HOOK(ON_DESTROYED, go->GetEntry(), go, player);
     }
 
     /**
@@ -63,7 +63,7 @@ public:
      */
     void OnDamaged(GameObject* go, Player* player) override
     {
-        TRIGGER_GAMEOBJECT_HOOK(ON_ADD_WORLD, go->GetEntry(), go, player);
+        TRIGGER_GAMEOBJECT_HOOK(ON_DAMAGED, go->GetEntry(), go, player);
     }
 };
 

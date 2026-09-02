@@ -3,7 +3,9 @@
 #include "HookRegistry.h"
 #include "Config.h"
 #include "Timer.h"
+#include <algorithm>
 #include <filesystem>
+#include <vector>
 
 namespace fs = std::filesystem;
 
@@ -28,12 +30,15 @@ void PythonEngine::Initialize()
     if (Py_IsInitialized())
         return;
 
-    bool isEnabled = sConfigMgr->GetOption<bool>("Python.Enabled", true);
+    bool isEnabled = sConfigMgr->GetOption<bool>("Python.Enabled", false);
     if (!isEnabled)
     {
         LOG_INFO("module.python", "Python Engine is disabled in config.");
         return;
     }
+
+    allowExecCommand.store(sConfigMgr->GetOption<bool>("Python.AllowExecCommand", false),
+                           std::memory_order_release);
 
     LOG_INFO("module.python", "Initializing Python Engine...");
 
@@ -50,7 +55,7 @@ void PythonEngine::Initialize()
 
         // CRITICAL: After Py_Initialize(), the main thread holds the GIL. We must
         // release it to allow other threads to use PyGILState_Ensure (GILGuard).
-        PyEval_SaveThread();
+        mainThreadState = PyEval_SaveThread();
 
         // Release: all initialization writes are visible when enabled is set
         enabled.store(true, std::memory_order_release);
@@ -75,25 +80,37 @@ void PythonEngine::Shutdown()
 
     // Set disabled with release semantics
     enabled.store(false, std::memory_order_release);
+    allowExecCommand.store(false, std::memory_order_release);
 
+    // Block new registrations/callbacks before restoring the initialization
+    // thread state. Restoring first could deadlock with a callback that holds a
+    // shared hook lock while waiting for the GIL.
+    std::unique_lock<std::shared_mutex> lock(hookMutex);
+    if (!mainThreadState)
     {
-        ClearHooks();
-        main_namespace = API::Object(); // Release main module ref
+        LOG_ERROR("module.python", "Python Engine main thread state is unavailable; refusing unsafe finalization.");
+        return;
     }
+
+    PyEval_RestoreThread(mainThreadState);
+    mainThreadState = nullptr;
+    hookMap.clear();
+    main_namespace = API::Object(); // Release main module ref while holding the GIL
 
     // WARNING: This should only be called if no other C++ static objects hold
     // Python references, as accessing them after finalization causes crashes.
-    // The GIL is automatically destroyed during finalization.
-    Py_Finalize();
+    // Py_FinalizeEx destroys the GIL, so no RAII GIL guard may span this call.
+    if (Py_FinalizeEx() < 0)
+        LOG_ERROR("module.python", "Python Engine finalization reported an error.");
 
     LOG_INFO("module.python", "Python Engine shutdown complete.");
 }
 
-void PythonEngine::LoadScripts()
+bool PythonEngine::LoadScripts()
 {
     // Acquire: see initialization writes
     if (!enabled.load(std::memory_order_acquire))
-        return;
+        return false;
 
     uint32 oldMSTime = getMSTime();
 
@@ -108,32 +125,49 @@ void PythonEngine::LoadScripts()
     if (!fs::exists(scriptsPath))
     {
         LOG_ERROR("module.python", "Python scripts directory not found: {}", scriptsPath.string());
-        return;
+        return false;
     }
 
     int count = 0;
-    GILGuard gil;
+    bool success = true;
+    std::vector<fs::path> scriptFiles;
 
     for (auto const& entry : fs::recursive_directory_iterator(scriptsPath))
     {
-        if (entry.path().extension() != ".py")
-            continue;
+        if (entry.is_regular_file() && entry.path().extension() == ".py")
+            scriptFiles.push_back(entry.path());
+    }
+    std::sort(scriptFiles.begin(), scriptFiles.end());
 
-        LOG_DEBUG("module.python", "Executing script: {}...", entry.path().string());
+    {
+        GILGuard gil;
+        for (fs::path const& scriptFile : scriptFiles)
+        {
+            LOG_DEBUG("module.python", "Executing script: {}...", scriptFile.string());
 
-        try
-        {
-            API::ExecFile(entry.path().string(), main_namespace, main_namespace);
-            count++;
-        }
-        catch (...)
-        {
-            LOG_ERROR("module.python", "Failed to execute script: {}", entry.path().string());
-            LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+            try
+            {
+                API::ExecFile(scriptFile.string(), main_namespace, main_namespace);
+                count++;
+            }
+            catch (...)
+            {
+                success = false;
+                LOG_ERROR("module.python", "Failed to execute script: {}", scriptFile.string());
+                LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+            }
         }
     }
 
+    if (!success)
+    {
+        ClearHooks();
+        LOG_ERROR("module.python", "Python script load failed; all Python hooks were disabled.");
+        return false;
+    }
+
     LOG_INFO("module.python", ">> Loaded {} Python scripts in {} ms.", count, GetMSTimeDiffToNow(oldMSTime));
+    return true;
 }
 
 void PythonEngine::ClearHooks()

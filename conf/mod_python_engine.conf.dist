@@ -5,11 +5,11 @@
 #
 #    Python.Enabled
 #        Description: Enable or disable the Python scripting engine.
-#        Default:     1 - Enabled
-#                     0 - Disabled
+#        Default:     0 - Disabled
+#                     1 - Enabled
 #
 
-Python.Enabled = 1
+Python.Enabled = 0
 
 #
 #    Python.ScriptsPath
@@ -19,6 +19,16 @@ Python.Enabled = 1
 #
 
 Python.ScriptsPath = "python_scripts"
+
+#
+#    Python.AllowExecCommand
+#        Description: Allow administrators and the server console to execute arbitrary Python
+#                     in the worldserver process through the .python exec command.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+#
+
+Python.AllowExecCommand = 0
 
 ###################################################################################################
 # LOGGING SETTINGS

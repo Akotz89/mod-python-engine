@@ -60,10 +60,16 @@ public:
         handler->SendSysMessage("Reloading Python scripts...");
 
         sPythonEngine->ClearHooks();
-        sPythonEngine->LoadScripts();
+        bool success = sPythonEngine->LoadScripts();
 
         // End reload (atomically clear reloading flag)
         sPythonEngine->EndReload();
+
+        if (!success)
+        {
+            handler->SendErrorMessage("Python script reload failed; all Python hooks are disabled");
+            return false;
+        }
 
         handler->SendSysMessage("Python scripts reloaded successfully");
 
@@ -72,6 +78,12 @@ public:
 
     static bool HandlePythonExecCommand(ChatHandler* handler, char const* args)
     {
+        if (!sPythonEngine->IsExecCommandAllowed())
+        {
+            handler->SendErrorMessage("Error: Python exec command is disabled");
+            return false;
+        }
+
         if (!sPythonEngine->IsEnabled())
         {
             handler->SendErrorMessage("Error: Python Engine is disabled");

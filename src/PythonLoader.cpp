@@ -31,8 +31,12 @@ public:
 
     void OnBeforeWorldInitialized() override
     {
+        if (!sPythonEngine->IsEnabled())
+            return;
+
         // Immediately load all scripts from Python.ScriptsPath
-        sPythonEngine->LoadScripts();
+        if (!sPythonEngine->LoadScripts())
+            LOG_ERROR("module.python", "Python scripts were not activated during world initialization.");
     }
 
     void OnAfterUnloadAllMaps() override
