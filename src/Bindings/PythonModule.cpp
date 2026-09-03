@@ -8,6 +8,9 @@
 CREATE_REGISTRY_SCOPE(SafeExports);
 REGISTER_TO_SCOPE(SafeExports, export_game_constants, 0);
 
+CREATE_REGISTRY_SCOPE(PopulationExports);
+REGISTER_TO_SCOPE(PopulationExports, export_population_api, 0);
+
 // Unsafe development-only forwards. This scope includes borrowed native
 // wrappers and state-mutating methods and is outside production acceptance.
 CREATE_REGISTRY_SCOPE(UnsafeExports);
@@ -53,6 +56,8 @@ void InitAzerothCoreModule()
 BOOST_PYTHON_MODULE(azerothcore)
 {
     EXECUTE_REGISTRY_SCOPE(SafeExports);
+    if (sPythonEngine->IsPopulationProfile())
+        EXECUTE_REGISTRY_SCOPE(PopulationExports);
     if (sPythonEngine->IsUnsafeDevelopmentProfile())
         EXECUTE_REGISTRY_SCOPE(UnsafeExports);
 }

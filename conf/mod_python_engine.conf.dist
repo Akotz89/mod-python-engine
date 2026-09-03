@@ -30,10 +30,49 @@ Python.ScriptsPath = ""
 #                     unsafe-development-v1 preserves the legacy forwarded hooks and native
 #                     bindings strictly for isolated development. It is outside production
 #                     acceptance and requires both unsafe gates below.
+#                     population-v1 exports only typed value snapshots and idempotent Playerbots
+#                     lifecycle/CAS ports during one non-reentrant world-thread tick. It executes
+#                     only Python.Population.EntryScript and fails closed on any error.
 #        Default:     "safe-static-v1"
 #
 
 Python.CapabilityProfile = "safe-static-v1"
+
+#
+#    Python.Population.EntryScript
+#        Description: Relative non-traversing Python file below Python.ScriptsPath used only by
+#                     population-v1. No other .py file is executed directly.
+#        Default:     ""
+#
+
+Python.Population.EntryScript = ""
+
+#
+#    Python.Population.MaxTickMilliseconds
+#        Description: Post-call watchdog bound. In-process Python cannot be preempted while hung;
+#                     acceptance must independently prove bounded callback behavior.
+#        Default:     25
+#
+
+Python.Population.MaxTickMilliseconds = 25
+
+#
+#    Python.Population.OwnerCharacterGuid
+#        Description: Authenticated human owner character used for earned high-water only. This
+#                     character is never part of the immutable RNDBOT identity manifest.
+#        Default:     0 - fail closed
+#
+
+Python.Population.OwnerCharacterGuid = 0
+
+#
+#    Python.Population.NativeOnlineLimit
+#        Description: Native capacity ceiling independently enforced by the Playerbots bridge.
+#                     It must remain below the durable 10000-identity roster.
+#        Default:     0 - fail closed
+#
+
+Python.Population.NativeOnlineLimit = 0
 
 #
 #    Python.AllowUnsafeDevelopmentProfile

@@ -29,6 +29,7 @@ public:
     enum class CapabilityProfile : uint8
     {
         SafeStaticV1,
+        PopulationV1,
         UnsafeDevelopmentV1,
     };
 
@@ -145,10 +146,26 @@ public:
         return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::UnsafeDevelopmentV1;
     }
 
+    [[nodiscard]] bool IsPopulationProfile() const noexcept
+    {
+        return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::PopulationV1;
+    }
+
+    [[nodiscard]] bool IsPopulationCallAllowed() const noexcept
+    {
+        return IsPopulationProfile() && populationTickActive &&
+               initializationThread == std::this_thread::get_id() &&
+               !reloading.load(std::memory_order_acquire);
+    }
+
     [[nodiscard]] char const* GetCapabilityProfileName() const noexcept
     {
-        return IsUnsafeDevelopmentProfile() ? "unsafe-development-v1" : "safe-static-v1";
+        if (IsUnsafeDevelopmentProfile())
+            return "unsafe-development-v1";
+        return IsPopulationProfile() ? "population-v1" : "safe-static-v1";
     }
+
+    [[nodiscard]] bool RunPopulationTick(uint32 diff);
 
     /**
      * @brief Main bridge between C++ game logic and Python scripts
@@ -277,8 +294,11 @@ private:
     HookRegistry hookMap;
     inline static thread_local HookRegistry* candidateRegistrationTarget = nullptr;
     API::Object main_namespace;
+    API::Object populationCallback;
     PyThreadState* mainThreadState{nullptr};
     std::thread::id initializationThread;
+    std::atomic<bool> populationHealthy{false};
+    inline static thread_local bool populationTickActive = false;
 };
 
 extern PythonEngine* sPythonEngine;

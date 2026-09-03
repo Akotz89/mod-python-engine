@@ -1,4 +1,5 @@
 #include "AutoRegistryMgr.h"
+#include "PopulationBridge.h"
 #include "PythonEngine.h"
 #include "ScriptMgr.h"
 
@@ -36,7 +37,16 @@ public:
 
         // Immediately load all scripts from Python.ScriptsPath
         if (!sPythonEngine->LoadScripts())
+        {
             LOG_ERROR("module.python", "Python scripts were not activated during world initialization.");
+            PyEng::Population::FailClosed();
+        }
+    }
+
+    void OnUpdate(uint32 diff) override
+    {
+        if (sPythonEngine->IsPopulationProfile())
+            sPythonEngine->RunPopulationTick(diff);
     }
 
     void OnAfterUnloadAllMaps() override

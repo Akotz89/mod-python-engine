@@ -1,6 +1,7 @@
 #include "PythonEngine.h"
 #include "PythonOutput.h"
 #include "HookRegistry.h"
+#include "PopulationBridge.h"
 #include "Config.h"
 #include "Timer.h"
 #include <algorithm>
@@ -13,6 +14,7 @@ namespace fs = std::filesystem;
 namespace
 {
     constexpr char SafeProfile[] = "safe-static-v1";
+    constexpr char PopulationProfile[] = "population-v1";
     constexpr char UnsafeProfile[] = "unsafe-development-v1";
     constexpr char UnsafeAcknowledgement[] = "CPI-223-UNSAFE-DEVELOPMENT-ONLY";
 
@@ -189,6 +191,10 @@ void PythonEngine::Initialize()
         }
         selectedProfile = CapabilityProfile::UnsafeDevelopmentV1;
     }
+    else if (configuredProfile == PopulationProfile)
+    {
+        selectedProfile = CapabilityProfile::PopulationV1;
+    }
     else if (configuredProfile != SafeProfile)
     {
         LOG_ERROR("module.python", "Unknown Python.CapabilityProfile '{}'; refusing initialization.",
@@ -217,6 +223,7 @@ void PythonEngine::Initialize()
         initialNamespace["__builtins__"] = API::Import("builtins");
         initialNamespace["__name__"] = "__main__";
         main_namespace = initialNamespace;
+        populationCallback = API::Object();
 
         // CRITICAL: After Py_Initialize(), the main thread holds the GIL. We must
         // release it to allow other threads to use PyGILState_Ensure (GILGuard).
@@ -265,6 +272,9 @@ void PythonEngine::Shutdown()
     enabled.store(false, std::memory_order_release);
     reloading.store(true, std::memory_order_release);
     allowExecCommand.store(false, std::memory_order_release);
+    populationHealthy.store(false, std::memory_order_release);
+    if (IsPopulationProfile() && !PyEng::Population::FailClosed())
+        LOG_ERROR("module.python", "Population provider did not acknowledge shutdown fail-close.");
 
     // Block new registrations/callbacks before restoring the initialization
     // thread state. Restoring first could deadlock with a callback that holds a
@@ -285,6 +295,7 @@ void PythonEngine::Shutdown()
     PyEval_RestoreThread(mainThreadState);
     mainThreadState = nullptr;
     hookMap.clear();
+    populationCallback = API::Object();
     main_namespace = API::Object(); // Release main module ref while holding the GIL
 
     // WARNING: This should only be called if no other C++ static objects hold
@@ -320,6 +331,25 @@ bool PythonEngine::LoadScripts()
         return false;
     }
 
+    if (IsPopulationProfile())
+    {
+        fs::path entry(sConfigMgr->GetOption<std::string>("Python.Population.EntryScript", ""));
+        if (entry.empty() || entry.is_absolute() || ContainsParentTraversal(entry))
+        {
+            LOG_ERROR("module.python", "Python.Population.EntryScript must be one relative non-traversing path.");
+            return false;
+        }
+        fs::path requested = (canonicalRoot / entry).lexically_normal();
+        auto found = std::find(scriptFiles.begin(), scriptFiles.end(), requested);
+        if (found == scriptFiles.end())
+        {
+            LOG_ERROR("module.python", "Python population entry script '{}' is absent or rejected.",
+                      requested.string());
+            return false;
+        }
+        scriptFiles.assign(1, *found);
+    }
+
     // Lock ordering is always hook lock before GIL. Existing callbacks finish
     // first; candidate Python objects are created and destroyed while the GIL
     // is held. The active registry/namespace are not changed until publication.
@@ -327,6 +357,7 @@ bool PythonEngine::LoadScripts()
     GILGuard gil;
     HookRegistry candidateHookMap;
     API::Object candidateNamespace;
+    API::Object candidatePopulationCallback;
     int count = 0;
 
     try
@@ -360,8 +391,23 @@ bool PythonEngine::LoadScripts()
         }
         candidateRegistrationTarget = nullptr;
 
+        if (IsPopulationProfile())
+        {
+            API::Dict namespaceDictionary = boost::python::extract<API::Dict>(candidateNamespace);
+            if (!namespaceDictionary.has_key("population_tick"))
+                throw std::runtime_error("population-v1 entry script did not publish population_tick");
+            candidatePopulationCallback = namespaceDictionary["population_tick"];
+            if (!API::IsCallable(candidatePopulationCallback))
+                throw std::runtime_error("population_tick is not callable");
+        }
+
         hookMap.swap(candidateHookMap);
         std::swap(main_namespace, candidateNamespace);
+        if (IsPopulationProfile())
+        {
+            std::swap(populationCallback, candidatePopulationCallback);
+            populationHealthy.store(true, std::memory_order_release);
+        }
         LOG_INFO("module.python", ">> Published {} Python scripts from canonical root '{}' in {} ms.", count,
                  canonicalRoot.string(), GetMSTimeDiffToNow(oldMSTime));
         return true;
@@ -374,6 +420,53 @@ bool PythonEngine::LoadScripts()
                   "side effects are outside the transactional contract.");
         return false;
     }
+}
+
+bool PythonEngine::RunPopulationTick(uint32 diff)
+{
+    if (!enabled.load(std::memory_order_acquire) || !IsPopulationProfile() ||
+        !populationHealthy.load(std::memory_order_acquire) ||
+        reloading.load(std::memory_order_acquire))
+        return false;
+    if (initializationThread != std::this_thread::get_id() || populationTickActive)
+    {
+        populationHealthy.store(false, std::memory_order_release);
+        PyEng::Population::FailClosed();
+        LOG_ERROR("module.python", "population-v1 dispatch violated its world-thread/non-reentrancy fence.");
+        return false;
+    }
+
+    uint32 started = getMSTime();
+    std::shared_lock<std::shared_mutex> lock(hookMutex);
+    GILGuard gil;
+    struct TickGuard
+    {
+        TickGuard() { populationTickActive = true; triggerDepth++; }
+        ~TickGuard() { triggerDepth--; populationTickActive = false; }
+    } guard;
+
+    bool accepted = false;
+    try
+    {
+        accepted = boost::python::extract<bool>(populationCallback(diff));
+    }
+    catch (...)
+    {
+        LOG_ERROR("module.python", "population-v1 tick raised an exception: {}", ExceptionHelper::Format());
+    }
+    uint32 elapsed = GetMSTimeDiffToNow(started);
+    uint32 maximum = sConfigMgr->GetOption<uint32>("Python.Population.MaxTickMilliseconds", 25);
+    if (!accepted || elapsed > maximum)
+    {
+        populationHealthy.store(false, std::memory_order_release);
+        if (!PyEng::Population::FailClosed())
+            LOG_ERROR("module.python", "Population provider did not acknowledge population-v1 fail-close.");
+        LOG_ERROR("module.python", "population-v1 disabled after tick result={} elapsed={}ms maximum={}ms. "
+                  "In-process Python cannot be preempted while hung; runtime acceptance must prove this bound.",
+                  accepted, elapsed, maximum);
+        return false;
+    }
+    return true;
 }
 
 bool PythonEngine::RegisterHook(std::string const& eventName, API::Object callback, uint32 entryId)
