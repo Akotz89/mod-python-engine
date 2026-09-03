@@ -13,17 +13,51 @@ Python.Enabled = 0
 
 #
 #    Python.ScriptsPath
-#        Description: Defines the location of the script folder used for loading scripts.
-#                     Scripts path can be relative or absolute.
-#        Default:     "python_scripts"
+#        Description: Absolute canonical root containing scripts. Relative paths, parent traversal,
+#                     symlink components/entries, unreadable entries, and non-regular .py entries
+#                     fail closed. Files load recursively in deterministic lexical order.
+#        Default:     "" - no script root; enabling the engine fails script activation.
 #
 
-Python.ScriptsPath = "python_scripts"
+Python.ScriptsPath = ""
+
+#
+#    Python.CapabilityProfile
+#        Description: Capability surface exported by the embedded module.
+#                     safe-static-v1 exports immutable game constants only: no hook registration,
+#                     native-object wrappers, state-mutating bindings, callback/hot-path dispatch,
+#                     boolean vetoes, or administrative exec.
+#                     unsafe-development-v1 preserves the legacy forwarded hooks and native
+#                     bindings strictly for isolated development. It is outside production
+#                     acceptance and requires both unsafe gates below.
+#        Default:     "safe-static-v1"
+#
+
+Python.CapabilityProfile = "safe-static-v1"
+
+#
+#    Python.AllowUnsafeDevelopmentProfile
+#        Description: First explicit gate for unsafe-development-v1.
+#        Default:     0 - Disabled
+#
+
+Python.AllowUnsafeDevelopmentProfile = 0
+
+#
+#    Python.UnsafeDevelopmentAcknowledgement
+#        Description: Second explicit gate for unsafe-development-v1. The exact development-only
+#                     acknowledgement is documented in docs/capability-profiles.md. Never set it
+#                     in a production configuration.
+#        Default:     ""
+#
+
+Python.UnsafeDevelopmentAcknowledgement = ""
 
 #
 #    Python.AllowExecCommand
 #        Description: Allow administrators and the server console to execute arbitrary Python
-#                     in the worldserver process through the .python exec command.
+#                     in the worldserver process through the .python exec command. Ignored and the
+#                     command is not registered unless unsafe-development-v1 passed both gates.
 #        Default:     0 - Disabled
 #                     1 - Enabled
 #

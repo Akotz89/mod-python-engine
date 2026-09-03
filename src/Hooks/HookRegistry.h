@@ -2,6 +2,7 @@
 #define MOD_PYTHON_ENGINE_HOOK_REGISTRY_H
 
 #include "HookInfo.h"
+#include "GeneratedHookPolicy.h"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -31,22 +32,31 @@ namespace PyEng::Hooks
      *
      * @param name String identifier for the hook (ex., "PLAYER_ON_LOGIN")
      * @param info Hook identifier structure
-     * @return Always returns true (used for static initialization)
+     * @return True only when generated evidence proves the hook is forwarded
      */
     inline bool RegisterHookInternal(char const* name, HookInfo info)
     {
+        GeneratedHookRecord const* generated = FindGeneratedHook(name);
+        if (!generated || !generated->forwarded || generated->category != info.category ||
+            generated->identifier != info.value)
+            return false;
+
         GetHookMap()[name] = info;
         return true;
     }
 
     /**
-     * @brief Resolves a string hook name to its corresponding HookInfo
+     * @brief Resolves a truthfully forwarded hook name to HookInfo
      *
      * @param name String identifier for the hook (ex., "PLAYER_ON_LOGIN")
      * @return HookInfo if found, otherwise std::nullopt
      */
     inline std::optional<HookInfo> GetHookByName(std::string_view name)
     {
+        GeneratedHookRecord const* generated = FindGeneratedHook(name);
+        if (!generated || !generated->forwarded)
+            return std::nullopt;
+
         auto const& hookMap = GetHookMap();
         auto itr = hookMap.find(std::string(name));
         return itr != hookMap.end() ? std::optional{itr->second} : std::nullopt;

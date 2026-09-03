@@ -13,11 +13,20 @@ public:
 
     ChatCommandTable GetCommands() const override
     {
-        static ChatCommandTable pythonCommandTable = {
-            { "status", HandlePythonStatusCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "reload", HandlePythonReloadCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "exec",   HandlePythonExecCommand,   SEC_ADMINISTRATOR, Console::Yes }
-        };
+        static ChatCommandTable pythonCommandTable = []
+        {
+            ChatCommandTable commands = {
+                { "status", HandlePythonStatusCommand, SEC_ADMINISTRATOR, Console::Yes },
+                { "reload", HandlePythonReloadCommand, SEC_ADMINISTRATOR, Console::Yes }
+            };
+
+            // Do not expose administrative exec at all in the default profile.
+            // The command appears only when both unsafe development and the
+            // separate exec switch passed their initialization gates.
+            if (sPythonEngine->IsUnsafeDevelopmentProfile() && sPythonEngine->IsExecCommandAllowed())
+                commands.push_back({ "exec", HandlePythonExecCommand, SEC_ADMINISTRATOR, Console::Yes });
+            return commands;
+        }();
 
         static ChatCommandTable commandTable = {
             { "python", pythonCommandTable }
@@ -36,8 +45,9 @@ public:
         }
 
         handler->PSendSysMessage("Python Engine: {}", sPythonEngine->IsBusy() ? "Busy" : "Ready");
+        handler->PSendSysMessage("Capability Profile: {}", sPythonEngine->GetCapabilityProfileName());
         handler->PSendSysMessage("Reloading: {}", sPythonEngine->IsReloading() ? "Yes" : "No");
-        handler->PSendSysMessage("Scripts Path: {}", sConfigMgr->GetOption<std::string>("Python.ScriptsPath", "python_scripts"));
+        handler->PSendSysMessage("Configured Scripts Path: {}", sConfigMgr->GetOption<std::string>("Python.ScriptsPath", ""));
 
         return true;
     }
@@ -59,7 +69,6 @@ public:
 
         handler->SendSysMessage("Reloading Python scripts...");
 
-        sPythonEngine->ClearHooks();
         bool success = sPythonEngine->LoadScripts();
 
         // End reload (atomically clear reloading flag)
@@ -67,7 +76,7 @@ public:
 
         if (!success)
         {
-            handler->SendErrorMessage("Python script reload failed; all Python hooks are disabled");
+            handler->SendErrorMessage("Python script reload failed; the last accepted registry remains active");
             return false;
         }
 
