@@ -145,7 +145,7 @@ boost::python::dict ReadPhaseSnapshot()
     return result;
 }
 
-bool FailClosed() { return Provider().FailClosed(); }
+bool FailClosedBinding() { return Provider().FailClosed(); }
 } // namespace
 
 void export_population_api()
@@ -161,5 +161,5 @@ void export_population_api()
     boost::python::def("population_release_session", ReleaseSession);
     boost::python::def("population_read_capacity_snapshot", ReadCapacitySnapshot);
     boost::python::def("population_read_phase_snapshot", ReadPhaseSnapshot);
-    boost::python::def("population_fail_closed", FailClosed);
+    boost::python::def("population_fail_closed", FailClosedBinding);
 }
