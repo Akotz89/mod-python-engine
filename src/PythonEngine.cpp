@@ -15,6 +15,7 @@ namespace
 {
     constexpr char SafeProfile[] = "safe-static-v1";
     constexpr char PopulationProfile[] = "population-v1";
+    constexpr char ComposedProfile[] = "safe-composed-v1";
     constexpr char UnsafeProfile[] = "unsafe-development-v1";
     constexpr char UnsafeAcknowledgement[] = "CPI-223-UNSAFE-DEVELOPMENT-ONLY";
 
@@ -145,6 +146,18 @@ namespace
         });
         return true;
     }
+
+    bool IsSafeEventName(std::string const& name)
+    {
+        if (name.empty() || name.size() > 96)
+            return false;
+
+        return std::all_of(name.begin(), name.end(), [](unsigned char value)
+        {
+            return (value >= 'a' && value <= 'z') ||
+                   (value >= '0' && value <= '9') || value == '.' || value == '_' || value == '-';
+        });
+    }
 }
 
 // Singleton Instance
@@ -194,6 +207,10 @@ void PythonEngine::Initialize()
     else if (configuredProfile == PopulationProfile)
     {
         selectedProfile = CapabilityProfile::PopulationV1;
+    }
+    else if (configuredProfile == ComposedProfile)
+    {
+        selectedProfile = CapabilityProfile::SafeComposedV1;
     }
     else if (configuredProfile != SafeProfile)
     {
@@ -251,6 +268,7 @@ void PythonEngine::Initialize()
                 mainThreadState = nullptr;
             }
             hookMap.clear();
+            safeEventMap.clear();
             main_namespace = API::Object();
             if (Py_FinalizeEx() < 0)
                 LOG_ERROR("module.python", "Python cleanup after initialization failure reported an error.");
@@ -272,8 +290,9 @@ void PythonEngine::Shutdown()
     enabled.store(false, std::memory_order_release);
     reloading.store(true, std::memory_order_release);
     allowExecCommand.store(false, std::memory_order_release);
-    populationHealthy.store(false, std::memory_order_release);
-    if (IsPopulationProfile() && !PyEng::Population::FailClosed())
+    bool populationWasHealthy = populationHealthy.exchange(false, std::memory_order_acq_rel);
+    safeEventsHealthy.store(false, std::memory_order_release);
+    if (populationWasHealthy && !PyEng::Population::FailClosed())
         LOG_ERROR("module.python", "Population provider did not acknowledge shutdown fail-close.");
 
     // Block new registrations/callbacks before restoring the initialization
@@ -295,6 +314,7 @@ void PythonEngine::Shutdown()
     PyEval_RestoreThread(mainThreadState);
     mainThreadState = nullptr;
     hookMap.clear();
+    safeEventMap.clear();
     populationCallback = API::Object();
     main_namespace = API::Object(); // Release main module ref while holding the GIL
 
@@ -331,23 +351,36 @@ bool PythonEngine::LoadScripts()
         return false;
     }
 
-    if (IsPopulationProfile())
+    fs::path populationEntry;
+    bool hasPopulationEntry = false;
+    if (HasPopulationCapability())
     {
-        fs::path entry(sConfigMgr->GetOption<std::string>("Python.Population.EntryScript", ""));
-        if (entry.empty() || entry.is_absolute() || ContainsParentTraversal(entry))
+        populationEntry = fs::path(sConfigMgr->GetOption<std::string>("Python.Population.EntryScript", ""));
+        hasPopulationEntry = !populationEntry.empty();
+        if (IsPopulationProfile() && !hasPopulationEntry)
         {
             LOG_ERROR("module.python", "Python.Population.EntryScript must be one relative non-traversing path.");
             return false;
         }
-        fs::path requested = (canonicalRoot / entry).lexically_normal();
-        auto found = std::find(scriptFiles.begin(), scriptFiles.end(), requested);
-        if (found == scriptFiles.end())
+        if (hasPopulationEntry &&
+            (populationEntry.is_absolute() || ContainsParentTraversal(populationEntry)))
         {
-            LOG_ERROR("module.python", "Python population entry script '{}' is absent or rejected.",
-                      requested.string());
+            LOG_ERROR("module.python", "Python.Population.EntryScript must be one relative non-traversing path.");
             return false;
         }
-        scriptFiles.assign(1, *found);
+        if (hasPopulationEntry)
+        {
+            fs::path requested = (canonicalRoot / populationEntry).lexically_normal();
+            auto found = std::find(scriptFiles.begin(), scriptFiles.end(), requested);
+            if (found == scriptFiles.end())
+            {
+                LOG_ERROR("module.python", "Python population entry script '{}' is absent or rejected.",
+                          requested.string());
+                return false;
+            }
+            if (IsPopulationProfile())
+                scriptFiles.assign(1, *found);
+        }
     }
 
     // Lock ordering is always hook lock before GIL. Existing callbacks finish
@@ -356,6 +389,7 @@ bool PythonEngine::LoadScripts()
     std::unique_lock<std::shared_mutex> lock(hookMutex);
     GILGuard gil;
     HookRegistry candidateHookMap;
+    SafeEventRegistry candidateSafeEventMap;
     API::Object candidateNamespace;
     API::Object candidatePopulationCallback;
     int count = 0;
@@ -367,7 +401,14 @@ bool PythonEngine::LoadScripts()
         namespaceDictionary["__name__"] = "__main__";
         namespaceDictionary["__script_root__"] = canonicalRoot.string();
         candidateNamespace = namespaceDictionary;
+
+        API::Object sysPath = API::Import("sys").attr("path");
+        API::Object scriptRoot = API::FromString(canonicalRoot.string());
+        if (!boost::python::extract<bool>(sysPath.attr("__contains__")(scriptRoot)))
+            sysPath.attr("insert")(0, scriptRoot);
+
         candidateRegistrationTarget = &candidateHookMap;
+        candidateSafeEventRegistrationTarget = &candidateSafeEventMap;
 
         for (fs::path const& scriptFile : scriptFiles)
         {
@@ -381,6 +422,7 @@ bool PythonEngine::LoadScripts()
             catch (...)
             {
                 candidateRegistrationTarget = nullptr;
+                candidateSafeEventRegistrationTarget = nullptr;
                 LOG_ERROR("module.python", "Failed to execute script: {}", scriptFile.string());
                 LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
                 LOG_ERROR("module.python", "Candidate reload rejected; the last accepted registry and namespace "
@@ -390,24 +432,32 @@ bool PythonEngine::LoadScripts()
             }
         }
         candidateRegistrationTarget = nullptr;
+        candidateSafeEventRegistrationTarget = nullptr;
 
-        if (IsPopulationProfile())
+        if (HasPopulationCapability())
         {
             API::Dict namespaceDictionary = boost::python::extract<API::Dict>(candidateNamespace);
-            if (!namespaceDictionary.has_key("population_tick"))
-                throw std::runtime_error("population-v1 entry script did not publish population_tick");
-            candidatePopulationCallback = namespaceDictionary["population_tick"];
-            if (!API::IsCallable(candidatePopulationCallback))
-                throw std::runtime_error("population_tick is not callable");
+            if (namespaceDictionary.has_key("population_tick"))
+            {
+                candidatePopulationCallback = namespaceDictionary["population_tick"];
+                if (!API::IsCallable(candidatePopulationCallback))
+                    throw std::runtime_error("population_tick is not callable");
+            }
+            else if (IsPopulationProfile() || hasPopulationEntry)
+            {
+                throw std::runtime_error("configured population entry did not publish population_tick");
+            }
         }
 
         hookMap.swap(candidateHookMap);
+        safeEventMap.swap(candidateSafeEventMap);
         std::swap(main_namespace, candidateNamespace);
-        if (IsPopulationProfile())
+        if (HasPopulationCapability())
         {
             std::swap(populationCallback, candidatePopulationCallback);
-            populationHealthy.store(true, std::memory_order_release);
+            populationHealthy.store(API::IsCallable(populationCallback), std::memory_order_release);
         }
+        safeEventsHealthy.store(HasSafeEventCapability(), std::memory_order_release);
         LOG_INFO("module.python", ">> Published {} Python scripts from canonical root '{}' in {} ms.", count,
                  canonicalRoot.string(), GetMSTimeDiffToNow(oldMSTime));
         return true;
@@ -415,6 +465,7 @@ bool PythonEngine::LoadScripts()
     catch (...)
     {
         candidateRegistrationTarget = nullptr;
+        candidateSafeEventRegistrationTarget = nullptr;
         LOG_ERROR("module.python", "Candidate reload failed before publication: {}", ExceptionHelper::Format());
         LOG_ERROR("module.python", "The last accepted registry and namespace were preserved; external Python "
                   "side effects are outside the transactional contract.");
@@ -424,11 +475,16 @@ bool PythonEngine::LoadScripts()
 
 bool PythonEngine::RunPopulationTick(uint32 diff)
 {
-    if (!enabled.load(std::memory_order_acquire) || !IsPopulationProfile() ||
-        !populationHealthy.load(std::memory_order_acquire) ||
+    if (!enabled.load(std::memory_order_acquire) || !HasPopulationCapability() ||
         reloading.load(std::memory_order_acquire))
         return false;
-    if (initializationThread != std::this_thread::get_id() || populationTickActive)
+
+    std::shared_lock<std::shared_mutex> lock(hookMutex);
+    if (!populationCallback.ptr())
+        return true;
+    if (!populationHealthy.load(std::memory_order_acquire))
+        return false;
+    if (initializationThread != std::this_thread::get_id() || populationTickActive || safeEventDispatchActive)
     {
         populationHealthy.store(false, std::memory_order_release);
         PyEng::Population::FailClosed();
@@ -437,7 +493,6 @@ bool PythonEngine::RunPopulationTick(uint32 diff)
     }
 
     uint32 started = getMSTime();
-    std::shared_lock<std::shared_mutex> lock(hookMutex);
     GILGuard gil;
     struct TickGuard
     {
@@ -464,6 +519,100 @@ bool PythonEngine::RunPopulationTick(uint32 diff)
         LOG_ERROR("module.python", "population-v1 disabled after tick result={} elapsed={}ms maximum={}ms. "
                   "In-process Python cannot be preempted while hung; runtime acceptance must prove this bound.",
                   accepted, elapsed, maximum);
+        return false;
+    }
+    return true;
+}
+
+bool PythonEngine::RegisterSafeEvent(std::string const& eventName, API::Object callback)
+{
+    if (!enabled.load(std::memory_order_acquire) || !HasSafeEventCapability() ||
+        !IsSafeEventName(eventName) || !API::IsCallable(callback) || !candidateSafeEventRegistrationTarget)
+        return false;
+
+    try
+    {
+        (*candidateSafeEventRegistrationTarget)[eventName].push_back(callback);
+        LOG_DEBUG("module.python", "Staged safe event '{}'", eventName);
+        return true;
+    }
+    catch (...)
+    {
+        LOG_ERROR("module.python", "Failed to stage safe event '{}'", eventName);
+        LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+        return false;
+    }
+}
+
+bool PythonEngine::DispatchSafeEvent(std::string const& eventName,
+                                     PyEng::Events::Fields const& fields)
+{
+    if (!enabled.load(std::memory_order_acquire) || !HasSafeEventCapability() ||
+        !safeEventsHealthy.load(std::memory_order_acquire) || reloading.load(std::memory_order_acquire) ||
+        initializationThread != std::this_thread::get_id() || safeEventDispatchActive)
+        return false;
+
+    std::shared_lock<std::shared_mutex> lock(hookMutex);
+    auto callbacks = safeEventMap.find(eventName);
+    if (callbacks == safeEventMap.end())
+        return true;
+
+    GILGuard gil;
+    struct EventGuard
+    {
+        EventGuard()
+        {
+            safeEventDispatchActive = true;
+            triggerDepth++;
+        }
+        ~EventGuard()
+        {
+            triggerDepth--;
+            safeEventDispatchActive = false;
+        }
+    } guard;
+
+    bool accepted = true;
+    uint32 started = getMSTime();
+    try
+    {
+        API::Dict payload;
+        for (PyEng::Events::Field const& field : fields)
+        {
+            std::visit([&](auto const& value)
+            {
+                payload[field.name] = value;
+            }, field.value);
+        }
+
+        for (API::Object const& callback : callbacks->second)
+        {
+            API::Object result = callback(payload);
+            if (!API::IsNone(result))
+            {
+                LOG_ERROR("module.python", "Safe event '{}' returned a value; callbacks must return None.",
+                          eventName);
+                accepted = false;
+                break;
+            }
+        }
+    }
+    catch (...)
+    {
+        LOG_ERROR("module.python", "Safe event '{}' raised an exception: {}", eventName,
+                  ExceptionHelper::Format());
+        accepted = false;
+    }
+
+    uint32 elapsed = GetMSTimeDiffToNow(started);
+    uint32 maximum = sConfigMgr->GetOption<uint32>("Python.SafeEvent.MaxMilliseconds", 25);
+
+    if (!accepted || elapsed > maximum)
+    {
+        safeEventsHealthy.store(false, std::memory_order_release);
+        LOG_ERROR("module.python", "Safe event '{}' disabled after result={} elapsed={}ms maximum={}ms. "
+                  "In-process Python cannot be preempted while hung.",
+                  eventName, accepted, elapsed, maximum);
         return false;
     }
     return true;

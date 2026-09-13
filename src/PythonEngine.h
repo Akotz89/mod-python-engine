@@ -6,6 +6,7 @@
 #include "PythonGIL.h"
 #include "ExceptionHelper.h"
 #include "ExecutionResult.h"
+#include "Events/SafeEvent.h"
 #include "HookInfo.h"
 #include "Define.h"
 #include "Log.h"
@@ -30,6 +31,7 @@ public:
     {
         SafeStaticV1,
         PopulationV1,
+        SafeComposedV1,
         UnsafeDevelopmentV1,
     };
 
@@ -151,9 +153,40 @@ public:
         return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::PopulationV1;
     }
 
+    [[nodiscard]] bool HasPopulationCapability() const noexcept
+    {
+        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
+        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
+    }
+
+    [[nodiscard]] bool HasSafeEventCapability() const noexcept
+    {
+        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
+        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
+    }
+
+    [[nodiscard]] bool HasPartyCapability() const noexcept
+    {
+        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
+        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
+    }
+
+    [[nodiscard]] bool IsSafeCompositionProfile() const noexcept
+    {
+        return HasSafeEventCapability();
+    }
+
     [[nodiscard]] bool IsPopulationCallAllowed() const noexcept
     {
-        return IsPopulationProfile() && populationTickActive &&
+        return HasPopulationCapability() && populationTickActive &&
+               initializationThread == std::this_thread::get_id() &&
+               !reloading.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] bool IsNativeCapabilityCallAllowed() const noexcept
+    {
+        return IsSafeCompositionProfile() &&
+               (populationTickActive || safeEventDispatchActive) &&
                initializationThread == std::this_thread::get_id() &&
                !reloading.load(std::memory_order_acquire);
     }
@@ -162,10 +195,16 @@ public:
     {
         if (IsUnsafeDevelopmentProfile())
             return "unsafe-development-v1";
+        if (capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::SafeComposedV1)
+            return "safe-composed-v1";
         return IsPopulationProfile() ? "population-v1" : "safe-static-v1";
     }
 
     [[nodiscard]] bool RunPopulationTick(uint32 diff);
+
+    [[nodiscard]] bool RegisterSafeEvent(std::string const& eventName, API::Object callback);
+    [[nodiscard]] bool DispatchSafeEvent(std::string const& eventName,
+                                         PyEng::Events::Fields const& fields);
 
     /**
      * @brief Main bridge between C++ game logic and Python scripts
@@ -214,6 +253,7 @@ private:
     using CallbackList = std::vector<API::Object>;
     using HookEntryMap = std::unordered_map<uint32, CallbackList>;
     using HookRegistry = std::unordered_map<HookInfo, HookEntryMap>;
+    using SafeEventRegistry = std::unordered_map<std::string, CallbackList>;
 
     PythonEngine() = default;
     ~PythonEngine();
@@ -293,12 +333,16 @@ private:
 
     HookRegistry hookMap;
     inline static thread_local HookRegistry* candidateRegistrationTarget = nullptr;
+    SafeEventRegistry safeEventMap;
+    inline static thread_local SafeEventRegistry* candidateSafeEventRegistrationTarget = nullptr;
     API::Object main_namespace;
     API::Object populationCallback;
     PyThreadState* mainThreadState{nullptr};
     std::thread::id initializationThread;
     std::atomic<bool> populationHealthy{false};
+    std::atomic<bool> safeEventsHealthy{false};
     inline static thread_local bool populationTickActive = false;
+    inline static thread_local bool safeEventDispatchActive = false;
 };
 
 extern PythonEngine* sPythonEngine;

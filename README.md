@@ -25,6 +25,28 @@ root. The loader canonicalizes it, rejects `..`, rejects symlink path components
 rejects non-regular `.py` entries, verifies containment, and loads regular lowercase `.py` files
 in deterministic lexical order. No current-working-directory resolution is performed.
 
+## Typed safe composition
+
+`safe-composed-v1` adds one typed, non-authoritative catalog for independent Python systems. It
+exports `RegisterEvent` plus the party functions `party_read_current`, `party_read_inventory`,
+`party_equip`, `party_trade`, `party_sell_vendor`, `party_request_item_use`, and
+`party_send_mail_batch`. These functions exchange snapshots and result dictionaries; they do not
+expose `Player*`, `Item*`, database handles, hook registration, arbitrary execution, or raw native
+object lifetimes. Native party code remains authoritative for inventory, equip, trade, vendor,
+item-use, and mail operations. The existing typed population ports are exported in the same profile,
+but can be called only from its configured population tick.
+
+`population-v1` keeps its existing required `Python.Population.EntryScript` and `population_tick`
+contract while exposing the same typed event/party catalog. It is the compatibility profile for the
+existing population consumer. `safe-composed-v1` loads the complete deterministic `.py` file set
+when no population entry is configured; setting an entry enables the optional population tick in
+that profile.
+
+Safe event callbacks receive one dictionary and must return `None`. The current native event names
+are `party.vendor_open` and `party.mailbox_open`; dispatch is synchronous, world-thread fenced,
+non-reentrant, and disabled after an exception or a post-call budget overrun. The budget is
+`Python.SafeEvent.MaxMilliseconds` and cannot preempt a callback that is still hung.
+
 ## Development-only legacy surface
 
 The separately named `unsafe-development-v1` profile preserves the legacy native bindings and the
@@ -65,14 +87,16 @@ working callback, and it does not wire additional hooks merely to increase the c
 
 Reload discovers and validates the complete file set, then executes candidates in a fresh namespace
 while hook registrations target a private candidate registry. The engine publishes the candidate
-namespace and registry together only after every file loads successfully. A candidate failure
-preserves the last accepted namespace and registry; the first failed activation therefore remains
-empty/fail-closed.
+namespace, hook registry, typed safe-event registry, and optional population callback together only
+after every file loads successfully. A candidate failure preserves the last accepted objects; the
+first failed activation therefore remains empty/fail-closed. The configured script root is added to
+the interpreter import path once so scripts can import sibling modules.
 
-The transaction covers only the engine-owned namespace and hook registry. Arbitrary Python side
-effects, imported-module state in `sys.modules`, filesystem/network effects, native calls made by
-the unsafe profile, and external systems cannot be rolled back. This is intentionally not described
-as a fully transactional Python runtime.
+The transaction covers only the engine-owned namespace, registries, and optional population
+callback. Arbitrary Python side
+effects, import-path/module state, filesystem/network effects, native calls made by the safe typed
+providers or unsafe profile, and external systems cannot be rolled back. This is intentionally not
+described as a fully transactional Python runtime.
 
 ## Lifetime, GIL, and shutdown contract
 
@@ -81,8 +105,10 @@ as a fully transactional Python runtime.
   GIL is owned.
 - Callback dispatch owns the GIL explicitly and converts Python exceptions to logged failures; a
   Python return value never becomes an authoritative native boolean decision.
-- The safe profile exposes no native-object wrappers or callbacks, eliminating dangling wrapper
-  use in that profile.
+- The safe-static profile exposes no native-object wrappers or callbacks, eliminating dangling
+  wrapper use in that profile.
+- Safe-composed and population profiles expose only value snapshots and synchronous native provider
+  calls inside their fenced callback; provider implementations own authority and persistence.
 - The unsafe profile's native wrappers are borrowed for the synchronous callback only. Retention is
   unsupported and remains unproved at runtime.
 - Shutdown disables dispatch, takes the exclusive hook lock, restores the initialization thread

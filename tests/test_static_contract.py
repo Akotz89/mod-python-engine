@@ -203,6 +203,17 @@ class CapabilityProfileTests(unittest.TestCase):
         self.assertFalse(surface.mutable_bindings)
         self.assertFalse(surface.exec_command)
 
+    def test_safe_composed_surface_is_typed_and_non_authoritative(self) -> None:
+        for profile in ("population-v1", "safe-composed-v1"):
+            surface = select_capability_surface(profile, allow_exec=True)
+            self.assertFalse(surface.hook_registration)
+            self.assertFalse(surface.native_wrappers)
+            self.assertFalse(surface.mutable_bindings)
+            self.assertFalse(surface.exec_command)
+            self.assertTrue(surface.safe_event_dispatch)
+            self.assertTrue(surface.population_bindings)
+            self.assertTrue(surface.party_bindings)
+
     def test_unsafe_surface_requires_every_acknowledgement_gate(self) -> None:
         for allow_unsafe, acknowledgement in (
             (False, ""),
@@ -237,6 +248,8 @@ class CapabilityProfileTests(unittest.TestCase):
         engine = (REPO_ROOT / "src/PythonEngine.cpp").read_text(encoding="utf-8")
         self.assertIn("Python.Enabled = 0", config)
         self.assertIn('Python.CapabilityProfile = "safe-static-v1"', config)
+        self.assertIn('safe-composed-v1', config)
+        self.assertIn('Python.SafeEvent.MaxMilliseconds = 25', config)
         self.assertIn("Python.AllowUnsafeDevelopmentProfile = 0", config)
         self.assertIn('Python.UnsafeDevelopmentAcknowledgement = ""', config)
         self.assertIn("Python.AllowExecCommand = 0", config)
@@ -260,6 +273,23 @@ class CapabilityProfileTests(unittest.TestCase):
         self.assertNotIn("export_player_class", safe_scope)
         self.assertNotIn("export_unit_class", safe_scope)
         self.assertIn("IsUnsafeDevelopmentProfile", module)
+        self.assertIn("export_safe_event_api", module)
+        self.assertIn("export_party_api", module)
+
+        party = (REPO_ROOT / "src/Bindings/PartyModule.cpp").read_text(encoding="utf-8")
+        for name in (
+            "party_read_current",
+            "party_read_inventory",
+            "party_equip",
+            "party_trade",
+            "party_sell_vendor",
+            "party_request_item_use",
+            "party_send_mail_batch",
+        ):
+            self.assertIn(f'def("{name}"', party)
+        events = (REPO_ROOT / "src/Events/SafeEvent.h").read_text(encoding="utf-8")
+        self.assertIn('"party.vendor_open"', events)
+        self.assertIn('"party.mailbox_open"', events)
 
         command = (REPO_ROOT / "src/Scripts/CommandScript.cpp").read_text(encoding="utf-8")
         self.assertIn("IsUnsafeDevelopmentProfile() && sPythonEngine->IsExecCommandAllowed()", command)

@@ -28,6 +28,9 @@ class CapabilitySurface:
     native_wrappers: bool
     mutable_bindings: bool
     exec_command: bool
+    safe_event_dispatch: bool = False
+    population_bindings: bool = False
+    party_bindings: bool = False
 
 
 def select_capability_surface(
@@ -41,6 +44,17 @@ def select_capability_surface(
 
     if profile == "safe-static-v1":
         return CapabilitySurface(profile, False, False, False, False)
+    if profile in {"population-v1", "safe-composed-v1"}:
+        return CapabilitySurface(
+            profile,
+            False,
+            False,
+            False,
+            False,
+            True,
+            True,
+            True,
+        )
     if profile != "unsafe-development-v1":
         raise ValueError("unknown capability profile")
     if not allow_unsafe or acknowledgement != UNSAFE_ACKNOWLEDGEMENT:

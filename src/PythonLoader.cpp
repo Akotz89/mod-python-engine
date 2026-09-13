@@ -45,7 +45,7 @@ public:
 
     void OnUpdate(uint32 diff) override
     {
-        if (sPythonEngine->IsPopulationProfile())
+        if (sPythonEngine->HasPopulationCapability())
             sPythonEngine->RunPopulationTick(diff);
     }
 

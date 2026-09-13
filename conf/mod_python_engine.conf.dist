@@ -30,9 +30,12 @@ Python.ScriptsPath = ""
 #                     unsafe-development-v1 preserves the legacy forwarded hooks and native
 #                     bindings strictly for isolated development. It is outside production
 #                     acceptance and requires both unsafe gates below.
-#                     population-v1 exports only typed value snapshots and idempotent Playerbots
-#                     lifecycle/CAS ports during one non-reentrant world-thread tick. It executes
-#                     only Python.Population.EntryScript and fails closed on any error.
+#                     population-v1 preserves the typed population ports and also enables the safe
+#                     composed event/party catalog, so existing population scripts can coexist with
+#                     independent Python systems in one host. It executes only
+#                     Python.Population.EntryScript and fails closed on any error.
+#                     safe-composed-v1 enables the same typed catalog without requiring a population
+#                     tick. A configured Python.Population.EntryScript adds that optional tick.
 #        Default:     "safe-static-v1"
 #
 
@@ -55,6 +58,15 @@ Python.Population.EntryScript = ""
 #
 
 Python.Population.MaxTickMilliseconds = 25
+
+#
+#    Python.SafeEvent.MaxMilliseconds
+#        Description: Post-call bound for typed, non-veto event callbacks. In-process Python cannot
+#                     be preempted while hung; an over-budget return disables safe-event dispatch.
+#        Default:     25
+#
+
+Python.SafeEvent.MaxMilliseconds = 25
 
 #
 #    Python.Population.OwnerCharacterGuid
