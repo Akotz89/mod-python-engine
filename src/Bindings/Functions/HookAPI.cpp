@@ -6,6 +6,14 @@ using namespace PyEng::Bridge;
 
 namespace
 {
+    void RejectRegistration(char const* eventName)
+    {
+        std::string message = "Hook registration rejected by capability/inventory/load policy: ";
+        message += eventName ? eventName : "<null>";
+        PyErr_SetString(PyExc_RuntimeError, message.c_str());
+        bp::throw_error_already_set();
+    }
+
     /**
      * @brief Register global hook (no entry ID)
      *
@@ -17,7 +25,8 @@ namespace
         if (!sPythonEngine->IsEnabled())
             return;
 
-        sPythonEngine->RegisterHook(std::string(eventName), callback, 0);
+        if (!sPythonEngine->RegisterHook(std::string(eventName), callback, 0))
+            RejectRegistration(eventName);
     }
 
     /**
@@ -32,7 +41,8 @@ namespace
         if (!sPythonEngine->IsEnabled())
             return;
 
-        sPythonEngine->RegisterHook(std::string(eventName), callback, entryId);
+        if (!sPythonEngine->RegisterHook(std::string(eventName), callback, entryId))
+            RejectRegistration(eventName);
     }
 
 } // anonymous namespace

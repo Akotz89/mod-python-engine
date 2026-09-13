@@ -12,6 +12,7 @@
 #include <atomic>
 #include <shared_mutex>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -25,6 +26,13 @@ using HookInfo = PyEng::Hooks::HookInfo;
 class PythonEngine
 {
 public:
+    enum class CapabilityProfile : uint8
+    {
+        SafeStaticV1,
+        PopulationV1,
+        UnsafeDevelopmentV1,
+    };
+
     [[nodiscard]] static PythonEngine* instance();
 
     PythonEngine(PythonEngine const&) = delete;
@@ -43,12 +51,7 @@ public:
     /**
      * @brief Loads and executes all Python scripts from the scripts directory
      */
-    void LoadScripts();
-
-    /**
-     * @brief Clear all registered hooks with proper locking and GIL
-     */
-    void ClearHooks();
+    [[nodiscard]] bool LoadScripts();
 
     /**
      * @brief Registers Python callback for the game event hook
@@ -57,7 +60,7 @@ public:
      * @param callback Python callable object
      * @param entryId Specific entry ID (creature, item, etc.; 0 = global)
      */
-    void RegisterHook(std::string const& eventName, API::Object callback, uint32 entryId = 0);
+    [[nodiscard]] bool RegisterHook(std::string const& eventName, API::Object callback, uint32 entryId = 0);
 
     /**
      * @brief Executes arbitrary Python code string
@@ -133,6 +136,37 @@ public:
         return enabled.load(std::memory_order_acquire);
     }
 
+    [[nodiscard]] bool IsExecCommandAllowed() const noexcept
+    {
+        return allowExecCommand.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] bool IsUnsafeDevelopmentProfile() const noexcept
+    {
+        return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::UnsafeDevelopmentV1;
+    }
+
+    [[nodiscard]] bool IsPopulationProfile() const noexcept
+    {
+        return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::PopulationV1;
+    }
+
+    [[nodiscard]] bool IsPopulationCallAllowed() const noexcept
+    {
+        return IsPopulationProfile() && populationTickActive &&
+               initializationThread == std::this_thread::get_id() &&
+               !reloading.load(std::memory_order_acquire);
+    }
+
+    [[nodiscard]] char const* GetCapabilityProfileName() const noexcept
+    {
+        if (IsUnsafeDevelopmentProfile())
+            return "unsafe-development-v1";
+        return IsPopulationProfile() ? "population-v1" : "safe-static-v1";
+    }
+
+    [[nodiscard]] bool RunPopulationTick(uint32 diff);
+
     /**
      * @brief Main bridge between C++ game logic and Python scripts
      *
@@ -149,7 +183,11 @@ public:
         // Acquire reloading flag to ensure we see hook modifications.
         // NOTE: Could use relaxed here since hookMutex provides synchronization,
         // but acquire is safer and the cost is negligible.
-        if (!enabled.load(std::memory_order_acquire) || reloading.load(std::memory_order_acquire))
+        // The safe profile has no callback surface. This check is defense in
+        // depth in addition to omitting Register and native wrappers from the
+        // safe azerothcore module.
+        if (!enabled.load(std::memory_order_acquire) || !IsUnsafeDevelopmentProfile() ||
+            reloading.load(std::memory_order_acquire))
             return;
 
         std::shared_lock<std::shared_mutex> lock(hookMutex);
@@ -225,6 +263,13 @@ private:
         if (itr == entryMap.end())
             return;
 
+        // Callback dispatch owns the GIL explicitly. Native wrappers are
+        // borrowed for the synchronous call only; this path exists solely in
+        // unsafe-development-v1 and retaining wrappers is unsupported. A
+        // Python exception is logged and converted to no native decision.
+        // There is no safe way to preempt a hung in-process callback, which is
+        // why every callback (especially hot paths) is forbidden in the safe
+        // profile and remains outside production acceptance.
         GILGuard gil;
         for (auto const& callback : itr->second)
         {
@@ -241,11 +286,19 @@ private:
 
     std::atomic<bool> enabled{false};
     std::atomic<bool> reloading{false};
+    std::atomic<bool> allowExecCommand{false};
+    std::atomic<CapabilityProfile> capabilityProfile{CapabilityProfile::SafeStaticV1};
     mutable std::shared_mutex hookMutex;
     inline static thread_local int triggerDepth = 0;
 
     HookRegistry hookMap;
+    inline static thread_local HookRegistry* candidateRegistrationTarget = nullptr;
     API::Object main_namespace;
+    API::Object populationCallback;
+    PyThreadState* mainThreadState{nullptr};
+    std::thread::id initializationThread;
+    std::atomic<bool> populationHealthy{false};
+    inline static thread_local bool populationTickActive = false;
 };
 
 extern PythonEngine* sPythonEngine;

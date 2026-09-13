@@ -26,7 +26,7 @@ public:
      */
     bool OnQuestAccept(Player* player, Item* item, Quest const* quest) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, item, quest);
+        TRIGGER_ITEM_HOOK(ON_QUEST_ACCEPT, item->GetEntry(), player, item, quest);
         return false;
     }
 
@@ -53,7 +53,7 @@ public:
      */
     bool OnRemove(Player* player, Item* item) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, item);
+        TRIGGER_ITEM_HOOK(ON_REMOVE, item->GetEntry(), player, item);
         return false;
     }
 
@@ -69,7 +69,7 @@ public:
      */
     bool OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, victim, spellInfo, item);
+        TRIGGER_ITEM_HOOK(ON_CAST_COMBAT_SPELL, item->GetEntry(), player, victim, spellInfo, item);
         return true;
     }
 
@@ -82,7 +82,7 @@ public:
      */
     bool OnExpire(Player* player, ItemTemplate const* proto) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, proto->ItemId, player, proto);
+        TRIGGER_ITEM_HOOK(ON_EXPIRE, proto->ItemId, player, proto);
         return false;
     }
 
@@ -96,7 +96,7 @@ public:
      */
     void OnGossipSelect(Player* player, Item* item, uint32 sender, uint32 action) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, item, sender, action);
+        TRIGGER_ITEM_HOOK(ON_GOSSIPE_SELECT, item->GetEntry(), player, item, sender, action);
     }
 
     /**
@@ -110,7 +110,7 @@ public:
      */
     void OnGossipSelectCode(Player* player, Item* item, uint32 sender, uint32 action, char const* code) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, item, sender, action, code);
+        TRIGGER_ITEM_HOOK(ON_GOSSIPE_SELECT_CODE, item->GetEntry(), player, item, sender, action, code);
     }
 };
 
