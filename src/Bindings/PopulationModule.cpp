@@ -136,14 +136,22 @@ bool ReserveIdentity(std::string const& identityKey, std::string const& accountK
     return Provider().ReserveIdentity(identityKey, accountKey, guidAllocationKey, waveKey);
 }
 
-uint32 EnsureAccount(std::string const& accountKey, std::string const& accountName,
-                     uint8 expectedManifestSlots)
+boost::python::dict CreationResult(uint32 id)
 {
-    return Provider().EnsureAccount(accountKey, accountName, expectedManifestSlots);
+    boost::python::dict result;
+    result["id"] = id;
+    result["pending"] = false;
+    return result;
 }
 
-uint32 EnsureCharacter(std::string const& identityKey, uint32 accountId,
-                       boost::python::dict const& raw)
+boost::python::dict EnsureAccount(std::string const& accountKey, std::string const& accountName,
+                                  uint8 expectedManifestSlots)
+{
+    return CreationResult(Provider().EnsureAccount(accountKey, accountName, expectedManifestSlots));
+}
+
+boost::python::dict EnsureCharacter(std::string const& identityKey, uint32 accountId,
+                                    boost::python::dict const& raw)
 {
     boost::python::dict appearance = boost::python::extract<boost::python::dict>(raw["appearance"]);
     CharacterCreationFields fields;
@@ -157,7 +165,7 @@ uint32 EnsureCharacter(std::string const& identityKey, uint32 accountId,
     fields.hairStyle = boost::python::extract<uint8>(appearance["hair_style"]);
     fields.hairColor = boost::python::extract<uint8>(appearance["hair_color"]);
     fields.facialHair = boost::python::extract<uint8>(appearance["facial_hair"]);
-    return Provider().EnsureCharacter(identityKey, accountId, fields);
+    return CreationResult(Provider().EnsureCharacter(identityKey, accountId, fields));
 }
 
 boost::python::dict BindIdentityOnce(std::string const& identityKey, uint32 accountId,
