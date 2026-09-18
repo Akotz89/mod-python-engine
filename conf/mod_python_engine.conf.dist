@@ -69,14 +69,6 @@ Python.Population.MaxTickMilliseconds = 25
 Python.SafeEvent.MaxMilliseconds = 25
 
 #
-#    Python.Population.OwnerCharacterGuid
-#        Description: Authenticated human owner character used for earned high-water only. This
-#                     character is never part of the immutable RNDBOT identity manifest.
-#        Default:     0 - fail closed
-#
-
-Python.Population.OwnerCharacterGuid = 0
-
 #
 #    Python.Population.NativeOnlineLimit
 #        Description: Native capacity ceiling independently enforced by the Playerbots bridge.
