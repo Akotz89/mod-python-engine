@@ -291,6 +291,18 @@ class CapabilityProfileTests(unittest.TestCase):
         self.assertIn('"party.vendor_open"', events)
         self.assertIn('"party.mailbox_open"', events)
 
+        bridge = (REPO_ROOT / "src/Party/PartyBridge.cpp").read_text(encoding="utf-8")
+        self.assertIn("std::atomic<Bridge*> Provider", bridge)
+        self.assertIn("RegisterBridge", bridge)
+        self.assertIn("UnregisterBridge", bridge)
+        self.assertIn("compare_exchange_strong", bridge)
+        self.assertIn("the required party provider is not registered", party)
+        engine = (REPO_ROOT / "src/PythonEngine.cpp").read_text(encoding="utf-8")
+        dispatch = engine.split("bool PythonEngine::DispatchSafeEvent", 1)[1].split(
+            "bool PythonEngine::RegisterHook", 1
+        )[0]
+        self.assertIn("!IsSafeEventName(eventName)", dispatch)
+
         command = (REPO_ROOT / "src/Scripts/CommandScript.cpp").read_text(encoding="utf-8")
         self.assertIn("IsUnsafeDevelopmentProfile() && sPythonEngine->IsExecCommandAllowed()", command)
         self.assertIn('commands.push_back({ "exec"', command)

@@ -32,6 +32,73 @@ std::vector<std::string> Strings(boost::python::list const& values)
     return result;
 }
 
+boost::python::dict ReadQuestSnapshot(std::string const& identityKey, uint32 observedQuestId)
+{
+    StrategicSnapshot value = Provider().ReadQuestSnapshot(identityKey, observedQuestId);
+    boost::python::dict result;
+    result["identity_key"] = value.identityKey;
+    result["account_id"] = value.accountId;
+    result["character_guid"] = value.characterGuid;
+    result["online"] = value.online;
+    result["control_allowed"] = value.controlAllowed;
+    result["reason"] = value.reason;
+    result["current_goal_quest_id"] = value.currentGoalQuestId;
+    result["observed_quest_id"] = value.observedQuestId;
+    result["observed_quest_status"] = value.observedQuestStatus;
+    result["level"] = value.level;
+    result["xp"] = value.xp;
+    boost::python::list quests;
+    for (StrategicQuest const& quest : value.quests)
+    {
+        boost::python::dict row;
+        row["quest_id"] = quest.questId;
+        row["status"] = quest.status;
+        row["eligible"] = quest.eligible;
+        row["rejection_reason"] = quest.rejectionReason;
+        quests.append(row);
+    }
+    result["quests"] = quests;
+    return result;
+}
+
+boost::python::dict SetQuestGoal(std::string const& identityKey, uint32 questId)
+{
+    StrategicGoalResult value = Provider().SetQuestGoal(identityKey, questId);
+    boost::python::dict result;
+    result["status"] = value.status;
+    result["reason"] = value.reason;
+    result["quest_id"] = value.questId;
+    return result;
+}
+
+boost::python::list RenewQuestGoals(boost::python::list const& rows)
+{
+    Py_ssize_t count = boost::python::len(rows);
+    if (count < 0 || count > 256)
+        throw std::runtime_error("quest renewal batch is outside 0..256");
+    std::vector<StrategicGoalRenewal> goals;
+    goals.reserve(static_cast<std::size_t>(count));
+    for (Py_ssize_t index = 0; index < count; ++index)
+    {
+        boost::python::dict row = boost::python::extract<boost::python::dict>(rows[index]);
+        boost::python::object quest = row["quest_id"];
+        if (boost::python::len(row) != 2 || !PyLong_Check(quest.ptr()) || PyBool_Check(quest.ptr()))
+            throw std::runtime_error("invalid quest renewal shape");
+        goals.push_back({boost::python::extract<std::string>(row["identity_key"]),
+                         boost::python::extract<uint32>(quest)});
+    }
+    boost::python::list result;
+    for (StrategicGoalResult const& value : Provider().RenewQuestGoals(goals))
+    {
+        boost::python::dict row;
+        row["status"] = value.status;
+        row["reason"] = value.reason;
+        row["quest_id"] = value.questId;
+        result.append(row);
+    }
+    return result;
+}
+
 boost::python::dict ReadOwnerHighWater()
 {
     OwnerHighWater value = Provider().ReadOwnerHighWater();
@@ -111,6 +178,31 @@ bool SetAdmission(std::string const& identityKey, std::string const& waveKey,
     return Provider().SetAdmission(identityKey, waveKey, manifestDigest);
 }
 
+bool ApplyProgressionPolicy(boost::python::list const& rows)
+{
+    Py_ssize_t count = boost::python::len(rows);
+    if (count < 0 || count > 256)
+        throw std::runtime_error("progression policy batch is outside 0..256");
+    std::vector<ProgressionPolicy> policies;
+    policies.reserve(static_cast<std::size_t>(count));
+    for (Py_ssize_t index = 0; index < count; ++index)
+    {
+        boost::python::dict row = boost::python::extract<boost::python::dict>(rows[index]);
+        boost::python::object held = row["held"];
+        boost::python::object ceiling = row["effective_ceiling"];
+        if (boost::python::len(row) != 3 || !PyBool_Check(held.ptr()) ||
+            !PyLong_Check(ceiling.ptr()) || PyBool_Check(ceiling.ptr()))
+            throw std::runtime_error("invalid progression policy shape");
+        int rawCeiling = boost::python::extract<int>(ceiling);
+        if (rawCeiling < 1 || rawCeiling > 80)
+            throw std::runtime_error("progression ceiling is outside 1..80");
+        policies.push_back({boost::python::extract<std::string>(row["identity_key"]),
+                            static_cast<uint8>(rawCeiling),
+                            boost::python::extract<bool>(held)});
+    }
+    return Provider().ApplyProgressionPolicy(policies);
+}
+
 bool RequestSession(std::string const& identityKey, uint64 capacityGeneration)
 {
     return Provider().RequestSession(identityKey, capacityGeneration);
@@ -150,6 +242,11 @@ bool FailClosedBinding() { return Provider().FailClosed(); }
 
 void export_population_api()
 {
+    boost::python::def("strategic_read_quest_snapshot", ReadQuestSnapshot,
+                       (boost::python::arg("identity_key"),
+                        boost::python::arg("observed_quest_id") = 0));
+    boost::python::def("strategic_set_quest_goal", SetQuestGoal);
+    boost::python::def("strategic_renew_quest_goals", RenewQuestGoals);
     boost::python::def("population_read_owner_high_water", ReadOwnerHighWater);
     boost::python::def("population_read_earned_snapshot", ReadEarnedSnapshot);
     boost::python::def("population_reserve_identity", ReserveIdentity);
@@ -157,6 +254,7 @@ void export_population_api()
     boost::python::def("population_ensure_character", EnsureCharacter);
     boost::python::def("population_bind_identity_once", BindIdentityOnce);
     boost::python::def("population_set_admission", SetAdmission);
+    boost::python::def("population_apply_progression_policy", ApplyProgressionPolicy);
     boost::python::def("population_request_session", RequestSession);
     boost::python::def("population_release_session", ReleaseSession);
     boost::python::def("population_read_capacity_snapshot", ReadCapacitySnapshot);

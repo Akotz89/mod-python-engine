@@ -548,6 +548,7 @@ bool PythonEngine::DispatchSafeEvent(std::string const& eventName,
                                      PyEng::Events::Fields const& fields)
 {
     if (!enabled.load(std::memory_order_acquire) || !HasSafeEventCapability() ||
+        !IsSafeEventName(eventName) ||
         !safeEventsHealthy.load(std::memory_order_acquire) || reloading.load(std::memory_order_acquire) ||
         initializationThread != std::this_thread::get_id() || safeEventDispatchActive)
         return false;

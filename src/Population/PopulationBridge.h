@@ -29,6 +29,13 @@ struct EarnedProgress
     bool online{false};
 };
 
+struct ProgressionPolicy
+{
+    std::string identityKey;
+    uint8 effectiveCeiling{0};
+    bool held{true};
+};
+
 struct IdentityBinding
 {
     std::string identityKey;
@@ -68,10 +75,52 @@ struct PhaseSnapshot
     std::string policyDigest;
 };
 
+struct StrategicQuest
+{
+    uint32 questId{0};
+    std::string status;
+    bool eligible{false};
+    std::string rejectionReason;
+};
+
+struct StrategicSnapshot
+{
+    std::string identityKey;
+    uint32 accountId{0};
+    uint32 characterGuid{0};
+    bool online{false};
+    bool controlAllowed{false};
+    std::string reason;
+    uint32 currentGoalQuestId{0};
+    uint32 observedQuestId{0};
+    std::string observedQuestStatus{"none"};
+    uint8 level{0};
+    uint32 xp{0};
+    std::vector<StrategicQuest> quests;
+};
+
+struct StrategicGoalRenewal
+{
+    std::string identityKey;
+    uint32 questId{0};
+};
+
+struct StrategicGoalResult
+{
+    std::string status;
+    std::string reason;
+    uint32 questId{0};
+};
+
 class Bridge
 {
 public:
     virtual ~Bridge() = default;
+    virtual StrategicSnapshot ReadQuestSnapshot(std::string const& identityKey,
+                                                uint32 observedQuestId) = 0;
+    virtual StrategicGoalResult SetQuestGoal(std::string const& identityKey, uint32 questId) = 0;
+    virtual std::vector<StrategicGoalResult> RenewQuestGoals(
+        std::vector<StrategicGoalRenewal> const& goals) = 0;
     virtual OwnerHighWater ReadOwnerHighWater() = 0;
     virtual std::vector<EarnedProgress> ReadEarnedSnapshot(std::vector<std::string> const& identityKeys) = 0;
     virtual bool ReserveIdentity(std::string const& identityKey, std::string const& accountKey,
@@ -84,6 +133,7 @@ public:
                                              uint32 characterGuid, std::string const& manifestDigest) = 0;
     virtual bool SetAdmission(std::string const& identityKey, std::string const& waveKey,
                               std::string const& manifestDigest) = 0;
+    virtual bool ApplyProgressionPolicy(std::vector<ProgressionPolicy> const& policies) = 0;
     virtual bool RequestSession(std::string const& identityKey, uint64 capacityGeneration) = 0;
     virtual bool ReleaseSession(std::string const& identityKey) = 0;
     virtual CapacitySnapshot ReadCapacitySnapshot() = 0;
