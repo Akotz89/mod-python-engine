@@ -1,6 +1,7 @@
 #include "PythonConverter.h"
 #include "PythonGIL.h"
 #include "PythonException.h"
+#include "Adapters/UnitAdapter.h"
 #include <cassert>
 #include <set>
 #include <map>
@@ -109,6 +110,25 @@ int main()
                 Exec("enumeration.set(2)\n", globals);
             }
             assert(enumeration == TestEnum::B);
+            Powers power = POWER_MANA;
+            ServerSideVisibilityType visibility = SERVERSIDE_VISIBILITY_GM;
+            float amount = 1.0f;
+            {
+                CallbackScope scope;
+                globals["power"] = Converter::ToPython(std::ref(power));
+                globals["visibility"] = Converter::ToPython(std::ref(visibility));
+                globals["amount"] = Converter::ToPython(std::ref(amount));
+                Exec("for value, replacement in ((power, 999), (visibility, 999), (visibility, -1), (amount, float('nan')), (amount, float('inf'))):\n"
+                     " try:\n  value.set(replacement)\n except (ValueError, OverflowError):\n  pass\n else:\n  raise AssertionError('invalid native value accepted')\n", globals);
+            }
+            assert(power == POWER_MANA && visibility == SERVERSIDE_VISIBILITY_GM && amount == 1.0f);
+            PyEng::UnitAdapter::CheckPower(POWER_RUNIC_POWER);
+            try
+            {
+                PyEng::UnitAdapter::CheckPower(static_cast<Powers>(999));
+                assert(false);
+            }
+            catch (std::out_of_range const&) {}
             assert(API::IsNone(Converter::ToPython(static_cast<char const*>(nullptr))));
         }
         ClearBorrowedReferences();

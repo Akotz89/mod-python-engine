@@ -29,8 +29,8 @@ void export_unit_class()
     unit_class.def("GetHealth", &Unit::GetHealth, BorrowedPolicy<>());
     unit_class.def("GetMaxHealth", &Unit::GetMaxHealth, BorrowedPolicy<>());
     unit_class.def("SetHealth", &Unit::SetHealth, bp::args("val"), BorrowedPolicy<>());
-    unit_class.def("GetPower", &Unit::GetPower, bp::args("power"), BorrowedPolicy<>());
-    unit_class.def("GetMaxPower", &Unit::GetMaxPower, bp::args("power"), BorrowedPolicy<>());
+    unit_class.def("GetPower", &PyEng::UnitAdapter::GetPower, bp::args("power"), BorrowedPolicy<>());
+    unit_class.def("GetMaxPower", &PyEng::UnitAdapter::GetMaxPower, bp::args("power"), BorrowedPolicy<>());
 
     // movement
     unit_class.def("IsInCombat", &Unit::IsInCombat, BorrowedPolicy<>());

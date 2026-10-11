@@ -2,8 +2,10 @@
 #define MOD_PYTHON_ENGINE_MUTABLE_H
 
 #include "Define.h"
+#include "SharedDefines.h"
 #include "PythonBorrowed.h"
 #include <string>
+#include <cmath>
 #include <type_traits>
 
 namespace PyEng::Bridge
@@ -18,7 +20,7 @@ namespace PyEng::Bridge
     class Mutable
     {
     public:
-        explicit Mutable(T& ref) : state(std::make_shared<State>(State{ref, currentCallbackLease}))
+        explicit Mutable(T& ref) : state(std::make_shared<State>(State{ref, currentCallbackLease, {}}))
         {
             CheckLease(state->lease);
             state->lease->commits.emplace_back([value = state, &ref] { ref = std::move(value->value); });
@@ -28,6 +30,18 @@ namespace PyEng::Bridge
         static Mutable ForEnum(Enum& ref)
         {
             Mutable value(static_cast<T>(ref), 0);
+            if constexpr (std::is_same_v<Enum, Powers>)
+                value.state->validate = [](T replacement)
+                {
+                    if (static_cast<uint64>(replacement) >= MAX_POWERS)
+                        RejectValue("power must name a native power slot");
+                };
+            else if constexpr (std::is_same_v<Enum, ServerSideVisibilityType>)
+                value.state->validate = [](T replacement)
+                {
+                    if (static_cast<uint64>(replacement) >= TOTAL_SERVERSIDE_VISIBILITY_TYPES)
+                        RejectValue("visibility type must name a native visibility slot");
+                };
             value.state->lease->commits.emplace_back([state = value.state, &ref]
             {
                 ref = static_cast<Enum>(state->value);
@@ -36,7 +50,16 @@ namespace PyEng::Bridge
         }
 
         T get() const { CheckLease(state->lease); return state->value; }
-        void set(T value) { CheckLease(state->lease); state->value = value; }
+        void set(T value)
+        {
+            CheckLease(state->lease);
+            if constexpr (std::is_floating_point_v<T>)
+                if (!std::isfinite(value))
+                    RejectValue("native floating values must be finite");
+            if (state->validate)
+                state->validate(value);
+            state->value = value;
+        }
         operator T() const { return get(); }
         std::string repr() const
         {
@@ -47,7 +70,13 @@ namespace PyEng::Bridge
         }
 
     private:
-        Mutable(T value, int) : state(std::make_shared<State>(State{value, currentCallbackLease}))
+        static void RejectValue(char const* message)
+        {
+            PyErr_SetString(PyExc_ValueError, message);
+            boost::python::throw_error_already_set();
+        }
+
+        Mutable(T value, int) : state(std::make_shared<State>(State{value, currentCallbackLease, {}}))
         {
             CheckLease(state->lease);
         }
@@ -56,6 +85,7 @@ namespace PyEng::Bridge
         {
             T value;
             std::shared_ptr<CallbackLease> lease;
+            std::function<void(T)> validate;
         };
         std::shared_ptr<State> state;
     };
