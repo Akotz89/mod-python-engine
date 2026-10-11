@@ -1,3 +1,5 @@
+> Historical evidence: the capability-profile design described here was superseded by the owner on 2026-10-11. It is not current engine policy.
+
 # CPI-227 frozen starting identity
 
 - Upstream: `https://github.com/privatecore/mod-python-engine.git`

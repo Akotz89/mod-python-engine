@@ -8,7 +8,7 @@ namespace
 {
     void RejectRegistration(char const* eventName)
     {
-        std::string message = "Hook registration rejected by capability/inventory/load policy: ";
+        std::string message = "Hook registration rejected (unknown event or non-callable callback): ";
         message += eventName ? eventName : "<null>";
         PyErr_SetString(PyExc_RuntimeError, message.c_str());
         bp::throw_error_already_set();

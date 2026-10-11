@@ -22,7 +22,7 @@ DECLARATION_RE = re.compile(
     r"(?P<name>[A-Z0-9_]+)\s*,\s*(?P<identifier>\d+)\s*\)"
 )
 FORWARD_RE = re.compile(
-    r"TRIGGER_(?P<category>[A-Z]+)_HOOK\(\s*(?P<name>[A-Z0-9_]+)"
+    r"TRIGGER_(?P<category>[A-Z]+)_HOOK(?:_RESULT)?\(\s*(?P<name>[A-Z0-9_]+)"
 )
 
 AUTHORITATIVE_BOOLEAN_HOOKS = {
@@ -71,6 +71,8 @@ class HookRecord:
     identifier: int
     declaration: str
     forwarders: tuple[str, ...]
+    signatures: tuple[str, ...] = ()
+    return_semantics: tuple[str, ...] = ()
 
     @property
     def full_name(self) -> str:
@@ -129,12 +131,34 @@ def collect_inventory(repo_root: Path) -> list[HookRecord]:
             identifiers[id_key] = name
 
     forwarded: dict[tuple[str, str], list[str]] = defaultdict(list)
+    signatures: dict[tuple[str, str], set[str]] = defaultdict(set)
+    semantics: dict[tuple[str, str], set[str]] = defaultdict(set)
     for path in sorted((repo_root / "src/Scripts").glob("*Script.cpp")):
         text = path.read_text(encoding="utf-8")
         for match in FORWARD_RE.finditer(text):
             key = (match.group("category"), match.group("name"))
             location = f"{path.relative_to(repo_root)}:{_line_number(text, match.start())}"
             forwarded[key].append(location)
+            methods = list(re.finditer(r"^    (.+?) override\n    \{", text[:match.start()], re.MULTILINE))
+            if methods:
+                signature = methods[-1].group(1)
+                signatures[key].add(signature[signature.index("("):signature.rindex(")") + 1])
+            else:
+                signature = ""
+            call_end = text.find(";", match.start())
+            call = text[match.start():call_end]
+            if "_HOOK_RESULT(" not in call:
+                policy = "notification; return ignored"
+            else:
+                arguments = call[call.index("(") + 1:].split(",")
+                default_index = 2 if key[0] in {"CREATURE", "GAMEOBJECT", "ITEM"} else 1
+                default = arguments[default_index].strip().rstrip(")")
+                policy = {
+                    "true": "permit; AND; default True",
+                    "false": "handled/override; OR; default False",
+                    "Optional<bool>{}": "optional decision; default None",
+                }.get(default, "last valid return; default " + default)
+            semantics[key].add(policy)
 
     missing = sorted(set(forwarded) - set(declarations))
     if missing:
@@ -148,6 +172,8 @@ def collect_inventory(repo_root: Path) -> list[HookRecord]:
             identifier=identifier,
             declaration=location,
             forwarders=tuple(sorted(forwarded.get((category, name), []))),
+            signatures=tuple(sorted(signatures.get((category, name), []))),
+            return_semantics=tuple(sorted(semantics.get((category, name), []))),
         )
         for (category, name), (identifier, location) in declarations.items()
     ]
@@ -164,11 +190,12 @@ def render_csv(records: list[HookRecord]) -> str:
             "hook_id",
             "declared",
             "forwarded",
-            "safe_static_v1",
-            "unsafe_development_v1",
+            "availability",
             "risk_tags",
             "declaration",
             "forwarders",
+            "callback_signature",
+            "return_semantics",
         )
     )
     for record in records:
@@ -179,11 +206,12 @@ def render_csv(records: list[HookRecord]) -> str:
                 record.identifier,
                 "yes",
                 "yes" if record.forwarded else "no",
-                "disabled-by-policy" if record.forwarded else "unsupported",
-                "available" if record.forwarded else "unsupported",
+                "available" if record.forwarded else "missing-native-forwarder",
                 record.risk_tags,
                 record.declaration,
                 ";".join(record.forwarders),
+                ";".join(record.signatures),
+                ";".join(record.return_semantics),
             )
         )
     return output.getvalue()
@@ -203,28 +231,82 @@ def render_markdown(records: list[HookRecord]) -> str:
         "",
         f"- Declared hook names: {len(records)}",
         f"- Actually forwarded hook names/IDs: {forwarded_total}",
-        f"- Disabled by the default `safe-static-v1` profile: {forwarded_total}",
-        f"- Unsupported because no native forwarder exists: {len(records) - forwarded_total}",
-        "- Safe-profile callback registrations: 0",
+        f"- Missing native forwarders: {len(records) - forwarded_total}",
         "",
-        "| Category | Declared | Forwarded | Disabled by safe policy | Unsupported |",
-        "| --- | ---: | ---: | ---: | ---: |",
+        "These are source forwarding counts, not runtime/gameplay acceptance claims.",
+        "Every name is available to ordinary scripts; there is no capability profile gate.",
+        "",
+        "| Category | Declared | Native forwarder | Missing |",
+        "| --- | ---: | ---: | ---: |",
     ]
     for category in sorted(categories):
         rows = categories[category]
         forwarded = sum(record.forwarded for record in rows)
         lines.append(
-            f"| {category} | {len(rows)} | {forwarded} | {forwarded} | {len(rows) - forwarded} |"
+            f"| {category} | {len(rows)} | {forwarded} | {len(rows) - forwarded} |"
         )
     lines.extend(
         [
             "",
-            "The detailed, per-hook classification is in `docs/hook-inventory.csv`. The broader",
-            "unsafe profile still rejects every unforwarded name; it does not turn declarations into",
-            "working callbacks. Availability in that profile is development evidence only.",
+            "Per-hook source locations are in `docs/hook-inventory.csv`.",
+            "Callback arguments and returns are documented in [hook-signatures.md](hook-signatures.md).",
+            "A callback returning None preserves native behavior. Permit hooks combine boolean",
+            "results with AND; handled/override hooks combine results with OR. Non-const reference",
+            "parameters are mutable callback-scoped objects. They must not be used after callback return.",
+            "",
+            "The old `PLAYER_GET_CUSTOM_GET_ARENA_TEAM_ID` and",
+            "`PLAYER_GET_CUSTOM_ARENA_PERSONAL_RATING` names are compatibility aliases for the",
+            "current arena getters, with `(player, slot, result)` mutable-result arguments.",
+            "The misspelled upstream `ITEM_ON_GOSSIPE_SELECT` and `_CODE` names remain supported.",
             "",
         ]
     )
+    return "\n".join(lines)
+
+
+def render_signatures(records: list[HookRecord]) -> str:
+    lines = [
+        "# Native Python hook signatures",
+        "",
+        "Generated from the native adapters by `tools/generate_hook_inventory.py`.",
+        "Arguments appear in callback order; C++ type names identify the native object or value.",
+        "Non-const `&` arguments are mutable wrappers: use `.get()` and `.set(value)`.",
+        "Native objects are borrowed handles; mutable references are callback-scoped and expire after return.",
+        "Null native pointers become `None`. `MAP_ON_BEFORE_CREATE_INSTANCE_SCRIPT` receives a mutable",
+        "`InstanceScript*` output reference for its second argument, or `None` when no output location exists.",
+        "",
+        "`None` preserves the native default. Permit callbacks combine boolean results with AND;",
+        "handled/override callbacks combine them with OR. This table records native dispatch semantics,",
+        "not proof that every event has been observed in the deployed realm.",
+        "",
+        "## Compatibility and native callsite behavior",
+        "",
+        "- The two `PLAYER_GET_CUSTOM_*ARENA*` names forward on the current arena getters, with",
+        "  `(player, slot, result)` arguments; mutate `result` rather than return a number.",
+        "- The upstream misspelling `ITEM_ON_GOSSIPE_SELECT` and `_CODE` remains supported.",
+        "- Item remove/expiry/quest-accept and creature/gameobject quest-accept results handle the",
+        "  script fallback. Their native gameplay callers ignore the result; returning True does not",
+        "  prevent item destruction or undo quest acceptance. Use the corresponding `PLAYER_CAN_*`",
+        "  permission hooks for actual pre-action decisions.",
+        "- Creature/gameobject quest-reward runs after reward application; True handles follow-up dialogue/AI.",
+        "- Creature quest-select and quest-complete now dispatch from the validated questgiver requests.",
+        "- `PLAYER_ON_BEFORE_INIT_TALENT_FOR_LEVEL` can change the pending talent-point count; its level",
+        "  parameter is a snapshot in the current core and does not change the character's level.",
+        "- The legacy weapon-dependent aura permit hook runs when the current core selects active damage",
+        "  aura contributions for an equipped attack slot (`apply=True`). Removal recomputes the remaining",
+        "  active contributions rather than replaying the removed aura with `apply=False`.",
+        "- World before-config, after-config, and custom-table callbacks on initial boot occur before scripts",
+        "  are loaded. Registered callbacks receive subsequent native events/reloads; initial startup is",
+        "  `WORLD_ON_STARTUP` after script activation.",
+        "",
+        "| Hook | Callback arguments | Return semantics |",
+        "| --- | --- | --- |",
+    ]
+    for record in records:
+        arguments = " / ".join(record.signatures).replace("|", "\\|")
+        policies = "; ".join(record.return_semantics)
+        lines.append(f"| `{record.full_name}` | `{arguments}` | {policies} |")
+    lines.append("")
     return "\n".join(lines)
 
 
@@ -237,8 +319,8 @@ def render_header(records: list[HookRecord]) -> str:
         for record in records
     )
     return f"""// Generated by tools/generate_hook_inventory.py. Do not edit.
-#ifndef MOD_PYTHON_ENGINE_GENERATED_HOOK_POLICY_H
-#define MOD_PYTHON_ENGINE_GENERATED_HOOK_POLICY_H
+#ifndef MOD_PYTHON_ENGINE_GENERATED_HOOK_INVENTORY_H
+#define MOD_PYTHON_ENGINE_GENERATED_HOOK_INVENTORY_H
 
 #include "HookInfo.h"
 #include <array>
@@ -267,7 +349,7 @@ namespace PyEng::Hooks
     }}
 }} // namespace PyEng::Hooks
 
-#endif // MOD_PYTHON_ENGINE_GENERATED_HOOK_POLICY_H
+#endif // MOD_PYTHON_ENGINE_GENERATED_HOOK_INVENTORY_H
 """
 
 
@@ -276,7 +358,8 @@ def generated_outputs(repo_root: Path) -> dict[Path, str]:
     return {
         repo_root / "docs/hook-inventory.csv": render_csv(records),
         repo_root / "docs/hook-inventory.md": render_markdown(records),
-        repo_root / "src/Hooks/GeneratedHookPolicy.h": render_header(records),
+        repo_root / "docs/hook-signatures.md": render_signatures(records),
+        repo_root / "src/Hooks/GeneratedHookInventory.h": render_header(records),
     }
 
 

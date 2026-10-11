@@ -36,6 +36,7 @@ namespace PyEng::Hooks
         VEHICLE,
         WORLD,
         WORLDOBJECT,
+        MAP,
     };
 
     /**

@@ -4,6 +4,9 @@
 #include "PythonAPI.h"
 #include "PythonConverter.h"
 #include "PythonGIL.h"
+#include "PythonBorrowed.h"
+#include <optional>
+#include <type_traits>
 #include "ExceptionHelper.h"
 #include "ExecutionResult.h"
 #include "Events/SafeEvent.h"
@@ -26,15 +29,8 @@ using HookInfo = PyEng::Hooks::HookInfo;
 
 class PythonEngine
 {
+    friend class PythonEngineTestAccess;
 public:
-    enum class CapabilityProfile : uint8
-    {
-        SafeStaticV1,
-        PopulationV1,
-        SafeComposedV1,
-        UnsafeDevelopmentV1,
-    };
-
     [[nodiscard]] static PythonEngine* instance();
 
     PythonEngine(PythonEngine const&) = delete;
@@ -138,66 +134,14 @@ public:
         return enabled.load(std::memory_order_acquire);
     }
 
-    [[nodiscard]] bool IsExecCommandAllowed() const noexcept
-    {
-        return allowExecCommand.load(std::memory_order_acquire);
-    }
-
-    [[nodiscard]] bool IsUnsafeDevelopmentProfile() const noexcept
-    {
-        return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::UnsafeDevelopmentV1;
-    }
-
-    [[nodiscard]] bool IsPopulationProfile() const noexcept
-    {
-        return capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::PopulationV1;
-    }
-
-    [[nodiscard]] bool HasPopulationCapability() const noexcept
-    {
-        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
-        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
-    }
-
-    [[nodiscard]] bool HasSafeEventCapability() const noexcept
-    {
-        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
-        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
-    }
-
-    [[nodiscard]] bool HasPartyCapability() const noexcept
-    {
-        CapabilityProfile profile = capabilityProfile.load(std::memory_order_acquire);
-        return profile == CapabilityProfile::PopulationV1 || profile == CapabilityProfile::SafeComposedV1;
-    }
-
-    [[nodiscard]] bool IsSafeCompositionProfile() const noexcept
-    {
-        return HasSafeEventCapability();
-    }
-
     [[nodiscard]] bool IsPopulationCallAllowed() const noexcept
     {
-        return HasPopulationCapability() && populationTickActive &&
-               initializationThread == std::this_thread::get_id() &&
-               !reloading.load(std::memory_order_acquire);
+        return populationTickActive && initializationThread == std::this_thread::get_id() && !IsReloading();
     }
 
     [[nodiscard]] bool IsNativeCapabilityCallAllowed() const noexcept
     {
-        return IsSafeCompositionProfile() &&
-               (populationTickActive || safeEventDispatchActive) &&
-               initializationThread == std::this_thread::get_id() &&
-               !reloading.load(std::memory_order_acquire);
-    }
-
-    [[nodiscard]] char const* GetCapabilityProfileName() const noexcept
-    {
-        if (IsUnsafeDevelopmentProfile())
-            return "unsafe-development-v1";
-        if (capabilityProfile.load(std::memory_order_acquire) == CapabilityProfile::SafeComposedV1)
-            return "safe-composed-v1";
-        return IsPopulationProfile() ? "population-v1" : "safe-static-v1";
+        return IsEnabled() && initializationThread == std::this_thread::get_id();
     }
 
     [[nodiscard]] bool RunPopulationTick(uint32 diff);
@@ -206,45 +150,63 @@ public:
     [[nodiscard]] bool DispatchSafeEvent(std::string const& eventName,
                                          PyEng::Events::Fields const& fields);
 
-    /**
-     * @brief Main bridge between C++ game logic and Python scripts
-     *
-     * When a specific game event occurs (ex., player login, creature death),
-     * this method looks up all registered Python callbacks and executes them.
-     *
-     * @param hinfo Hook identifier to trigger
-     * @param entryId Specific entry ID (creature, item, etc.; 0 = global)
-     * @param args Variadic arguments to pass to Python callbacks
-     */
     template<typename... Args>
-    void Trigger(HookInfo hinfo, uint32 entryId, Args&&... args)
+    void Trigger(HookInfo hook, uint32 entryId, Args&&... args)
     {
-        // Acquire reloading flag to ensure we see hook modifications.
-        // NOTE: Could use relaxed here since hookMutex provides synchronization,
-        // but acquire is safer and the cost is negligible.
-        // The safe profile has no callback surface. This check is defense in
-        // depth in addition to omitting Register and native wrappers from the
-        // safe azerothcore module.
-        if (!enabled.load(std::memory_order_acquire) || !IsUnsafeDevelopmentProfile() ||
-            reloading.load(std::memory_order_acquire))
+        if (!IsEnabled() || IsReloading() || !HasCallbacks(hook, entryId))
             return;
+        GILGuard gil;
+        auto callbacks = SnapshotCallbacks(hook, entryId);
+        TriggerDepthGuard depth;
+        for (auto const& callback : callbacks)
+        {
+            try
+            {
+                CallbackScope scope;
+                Call(callback, args...);
+            }
+            catch (...)
+            {
+                auto error = ExceptionHelper::Format();
+                LOG_ERROR("module.python", "{}", error);
+            }
+        }
+    }
 
-        std::shared_lock<std::shared_mutex> lock(hookMutex);
-
-        // CRITICAL: Double-check reloading and bindings after acquiring lock.
-        // Prevent race conditions with reload scripts operations.
-        if (reloading.load(std::memory_order_acquire) || !HasBindingsFor(hinfo, entryId))
-            return;
-
-        TriggerDepthGuard depthGuard;
-
-        auto itr = hookMap.find(hinfo);
-        if (itr == hookMap.end())
-            return;
-
-        TriggerCallbacks(itr->second, 0, std::forward<Args>(args)...);
-        if (entryId > 0)
-            TriggerCallbacks(itr->second, entryId, std::forward<Args>(args)...);
+    template<typename Result, typename... Args>
+    Result TriggerResult(HookInfo hook, uint32 entryId, Result fallback, Args&&... args)
+    {
+        if (!IsEnabled() || IsReloading() || !HasCallbacks(hook, entryId))
+            return fallback;
+        GILGuard gil;
+        auto callbacks = SnapshotCallbacks(hook, entryId);
+        TriggerDepthGuard depth;
+        Result decision = fallback;
+        for (auto const& callback : callbacks)
+        {
+            try
+            {
+                CallbackScope scope;
+                API::Object result = Call(callback, args...);
+                if (API::IsNone(result))
+                    continue;
+                if constexpr (std::is_same_v<Result, std::optional<bool>>)
+                    decision = Converter::FromPython<bool>(result);
+                else if constexpr (std::is_same_v<Result, bool>)
+                {
+                    bool value = Converter::FromPython<bool>(result);
+                    decision = fallback ? decision && value : decision || value;
+                }
+                else
+                    decision = Converter::FromPython<Result>(result);
+            }
+            catch (...)
+            {
+                auto error = ExceptionHelper::Format();
+                LOG_ERROR("module.python", "{}", error);
+            }
+        }
+        return decision;
     }
 
     static void TriggerHook(HookInfo* hinfo, uint32 entryId);
@@ -267,67 +229,53 @@ private:
         TriggerDepthGuard& operator=(TriggerDepthGuard const&) = delete;
     };
 
-    /**
-     * @brief Checks if any callbacks are registered for specific hook
-     *
-     * @param hinfo Hook identifier to check
-     * @param entryId Specific entry ID (creature, item, etc.; 0 = global)
-     * @return True if callbacks registered, false otherwise
-     */
-    [[nodiscard]] bool HasBindingsFor(HookInfo hinfo, uint32 entryId = 0) const noexcept
+    bool HasCallbacks(HookInfo hook, uint32 entryId) const
     {
-        auto itr = hookMap.find(hinfo);
-        if (itr == hookMap.end())
-            return false;
-
-        auto callbacks = [&](uint32 id)
+        std::shared_lock<std::shared_mutex> lock(hookMutex);
+        auto found = hookMap.find(hook);
+        if (found == hookMap.end()) return false;
+        auto has = [&](uint32 id)
         {
-            auto it = itr->second.find(id);
-            return it != itr->second.end() && !it->second.empty();
+            auto entries = found->second.find(id);
+            return entries != found->second.end() && !entries->second.empty();
         };
-
-        return callbacks(0) || (entryId > 0 && callbacks(entryId));
+        return has(0) || (entryId && has(entryId));
     }
 
-    /**
-     * @brief Executes all registered Python callbacks for specific hook
-     *
-     * @param entryMap Map of entity IDs to callback vectors
-     * @param entryId Specific entry ID (creature, item, etc.; 0 = global)
-     * @param args Variadic arguments to pass to Python callbacks
-     */
-    template<typename... Args>
-    void TriggerCallbacks(HookEntryMap const& entryMap, uint32 entryId, Args&&... args)
+    // Called with the GIL held; release the registry lock before invoking Python.
+    CallbackList SnapshotCallbacks(HookInfo hook, uint32 entryId)
     {
-        auto itr = entryMap.find(entryId);
-        if (itr == entryMap.end())
-            return;
-
-        // Callback dispatch owns the GIL explicitly. Native wrappers are
-        // borrowed for the synchronous call only; this path exists solely in
-        // unsafe-development-v1 and retaining wrappers is unsupported. A
-        // Python exception is logged and converted to no native decision.
-        // There is no safe way to preempt a hung in-process callback, which is
-        // why every callback (especially hot paths) is forbidden in the safe
-        // profile and remains outside production acceptance.
-        GILGuard gil;
-        for (auto const& callback : itr->second)
+        std::shared_lock<std::shared_mutex> lock(hookMutex);
+        CallbackList callbacks;
+        if (!IsEnabled() || IsReloading())
+            return callbacks;
+        auto found = hookMap.find(hook);
+        if (found == hookMap.end())
+            return callbacks;
+        auto append = [&](uint32 id)
         {
-            try
-            {
-                callback(Converter::ToPython(args)...);
-            }
-            catch (...)
-            {
-                LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
-            }
-        }
+            auto entries = found->second.find(id);
+            if (entries != found->second.end())
+                callbacks.insert(callbacks.end(), entries->second.begin(), entries->second.end());
+        };
+        append(0);
+        if (entryId) append(entryId);
+        return callbacks;
+    }
+
+    template<typename... Args>
+    static API::Object Call(API::Object const& callback, Args&&... args)
+    {
+        API::List values;
+        (values.append(Converter::ToPython(args)), ...);
+        API::Tuple tuple(values);
+        PyObject* result = PyObject_CallObject(callback.ptr(), tuple.ptr());
+        if (!result) boost::python::throw_error_already_set();
+        return API::Object(boost::python::handle<>(result));
     }
 
     std::atomic<bool> enabled{false};
     std::atomic<bool> reloading{false};
-    std::atomic<bool> allowExecCommand{false};
-    std::atomic<CapabilityProfile> capabilityProfile{CapabilityProfile::SafeStaticV1};
     mutable std::shared_mutex hookMutex;
     inline static thread_local int triggerDepth = 0;
 

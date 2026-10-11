@@ -13,37 +13,9 @@ namespace fs = std::filesystem;
 
 namespace
 {
-    constexpr char SafeProfile[] = "safe-static-v1";
-    constexpr char PopulationProfile[] = "population-v1";
-    constexpr char ComposedProfile[] = "safe-composed-v1";
-    constexpr char UnsafeProfile[] = "unsafe-development-v1";
-    constexpr char UnsafeAcknowledgement[] = "CPI-223-UNSAFE-DEVELOPMENT-ONLY";
-
     bool ContainsParentTraversal(fs::path const& path)
     {
         return std::find(path.begin(), path.end(), fs::path("..")) != path.end();
-    }
-
-    bool RejectSymlinkComponents(fs::path const& absolutePath, std::string& error)
-    {
-        fs::path current;
-        for (fs::path const& component : absolutePath)
-        {
-            current /= component;
-            std::error_code ec;
-            fs::file_status status = fs::symlink_status(current, ec);
-            if (ec)
-            {
-                error = "cannot inspect path component '" + current.string() + "': " + ec.message();
-                return false;
-            }
-            if (fs::is_symlink(status))
-            {
-                error = "symlink path component is forbidden: " + current.string();
-                return false;
-            }
-        }
-        return true;
     }
 
     bool IsWithinRoot(fs::path const& root, fs::path const& candidate)
@@ -61,19 +33,6 @@ namespace
             error = "Python.ScriptsPath is empty";
             return false;
         }
-        if (!configuredRoot.is_absolute())
-        {
-            error = "Python.ScriptsPath must be absolute; current-working-directory resolution is forbidden";
-            return false;
-        }
-        if (ContainsParentTraversal(configuredRoot))
-        {
-            error = "Python.ScriptsPath must not contain parent traversal components";
-            return false;
-        }
-        if (!RejectSymlinkComponents(configuredRoot, error))
-            return false;
-
         std::error_code ec;
         canonicalRoot = fs::canonical(configuredRoot, ec);
         if (ec)
@@ -104,15 +63,10 @@ namespace
                 error = "cannot inspect script entry '" + entry.path().string() + "': " + ec.message();
                 return false;
             }
-            if (fs::is_symlink(status))
-            {
-                error = "symlink entries are forbidden in Python.ScriptsPath: " + entry.path().string();
-                return false;
-            }
 
             if (entry.path().extension() == ".py")
             {
-                if (!fs::is_regular_file(status))
+                if (!entry.is_regular_file(ec) || ec)
                 {
                     error = "Python script entry is not a regular file: " + entry.path().string();
                     return false;
@@ -188,42 +142,6 @@ void PythonEngine::Initialize()
         return;
     }
 
-    std::string configuredProfile = sConfigMgr->GetOption<std::string>("Python.CapabilityProfile",
-                                                                        std::string(SafeProfile));
-    CapabilityProfile selectedProfile = CapabilityProfile::SafeStaticV1;
-    if (configuredProfile == UnsafeProfile)
-    {
-        bool allowUnsafe = sConfigMgr->GetOption<bool>("Python.AllowUnsafeDevelopmentProfile", false);
-        std::string acknowledgement = sConfigMgr->GetOption<std::string>(
-            "Python.UnsafeDevelopmentAcknowledgement", "");
-        if (!allowUnsafe || acknowledgement != UnsafeAcknowledgement)
-        {
-            LOG_ERROR("module.python", "Unsafe Python profile requested without the explicit CPI-223 development "
-                      "gate and acknowledgement; refusing initialization.");
-            return;
-        }
-        selectedProfile = CapabilityProfile::UnsafeDevelopmentV1;
-    }
-    else if (configuredProfile == PopulationProfile)
-    {
-        selectedProfile = CapabilityProfile::PopulationV1;
-    }
-    else if (configuredProfile == ComposedProfile)
-    {
-        selectedProfile = CapabilityProfile::SafeComposedV1;
-    }
-    else if (configuredProfile != SafeProfile)
-    {
-        LOG_ERROR("module.python", "Unknown Python.CapabilityProfile '{}'; refusing initialization.",
-                  configuredProfile);
-        return;
-    }
-
-    capabilityProfile.store(selectedProfile, std::memory_order_release);
-    bool execAllowed = selectedProfile == CapabilityProfile::UnsafeDevelopmentV1 &&
-                       sConfigMgr->GetOption<bool>("Python.AllowExecCommand", false);
-    allowExecCommand.store(execAllowed, std::memory_order_release);
-
     LOG_INFO("module.python", "Initializing Python Engine...");
 
     try
@@ -236,11 +154,13 @@ void PythonEngine::Initialize()
 
         // Establish an isolated initial namespace. LoadScripts builds another
         // candidate namespace and publishes it only after every script succeeds.
-        API::Dict initialNamespace;
-        initialNamespace["__builtins__"] = API::Import("builtins");
-        initialNamespace["__name__"] = "__main__";
-        main_namespace = initialNamespace;
-        populationCallback = API::Object();
+        {
+            API::Dict initialNamespace;
+            initialNamespace["__builtins__"] = API::Import("builtins");
+            initialNamespace["__name__"] = "__main__";
+            main_namespace = initialNamespace;
+            populationCallback = API::Object();
+        }
 
         // CRITICAL: After Py_Initialize(), the main thread holds the GIL. We must
         // release it to allow other threads to use PyGILState_Ensure (GILGuard).
@@ -250,13 +170,11 @@ void PythonEngine::Initialize()
         reloading.store(false, std::memory_order_release);
         enabled.store(true, std::memory_order_release);
 
-        LOG_INFO("module.python", "Python Engine initialized with capability profile '{}'.",
-                 GetCapabilityProfileName());
+        LOG_INFO("module.python", "General-purpose Python Engine initialized.");
     }
     catch (...)
     {
         enabled.store(false, std::memory_order_relaxed);
-        allowExecCommand.store(false, std::memory_order_relaxed);
 
         // Initialization and finalization stay on the initialization thread.
         // Python-owned references are released while that thread owns the GIL.
@@ -270,6 +188,7 @@ void PythonEngine::Initialize()
             hookMap.clear();
             safeEventMap.clear();
             main_namespace = API::Object();
+            ClearBorrowedReferences();
             if (Py_FinalizeEx() < 0)
                 LOG_ERROR("module.python", "Python cleanup after initialization failure reported an error.");
             initializationThread = std::thread::id();
@@ -289,16 +208,12 @@ void PythonEngine::Shutdown()
     // Set disabled with release semantics
     enabled.store(false, std::memory_order_release);
     reloading.store(true, std::memory_order_release);
-    allowExecCommand.store(false, std::memory_order_release);
     bool populationWasHealthy = populationHealthy.exchange(false, std::memory_order_acq_rel);
     safeEventsHealthy.store(false, std::memory_order_release);
     if (populationWasHealthy && !PyEng::Population::FailClosed())
         LOG_ERROR("module.python", "Population provider did not acknowledge shutdown fail-close.");
 
-    // Block new registrations/callbacks before restoring the initialization
-    // thread state. Restoring first could deadlock with a callback that holds a
-    // shared hook lock while waiting for the GIL.
-    std::unique_lock<std::shared_mutex> lock(hookMutex);
+    // Native dispatch is quiesced before shutdown; all registry operations take the GIL first.
     if (!mainThreadState)
     {
         LOG_ERROR("module.python", "Python Engine main thread state is unavailable; refusing unsafe finalization.");
@@ -312,6 +227,7 @@ void PythonEngine::Shutdown()
     }
 
     PyEval_RestoreThread(mainThreadState);
+    std::unique_lock<std::shared_mutex> lock(hookMutex);
     mainThreadState = nullptr;
     hookMap.clear();
     safeEventMap.clear();
@@ -321,10 +237,10 @@ void PythonEngine::Shutdown()
     // WARNING: This should only be called if no other C++ static objects hold
     // Python references, as accessing them after finalization causes crashes.
     // Py_FinalizeEx destroys the GIL, so no RAII GIL guard may span this call.
+    ClearBorrowedReferences();
     if (Py_FinalizeEx() < 0)
         LOG_ERROR("module.python", "Python Engine finalization reported an error.");
 
-    capabilityProfile.store(CapabilityProfile::SafeStaticV1, std::memory_order_release);
     reloading.store(false, std::memory_order_release);
     initializationThread = std::thread::id();
 
@@ -337,6 +253,14 @@ bool PythonEngine::LoadScripts()
     if (!enabled.load(std::memory_order_acquire))
         return false;
 
+    if (triggerDepth > 0)
+        return false;
+    struct ReloadGuard
+    {
+        PythonEngine& engine;
+        bool owns;
+        ~ReloadGuard() { if (owns) engine.EndReload(); }
+    } reloadGuard{*this, BeginReload()};
     uint32 oldMSTime = getMSTime();
 
     LOG_INFO("module.python", "Loading Python scripts...");
@@ -353,15 +277,10 @@ bool PythonEngine::LoadScripts()
 
     fs::path populationEntry;
     bool hasPopulationEntry = false;
-    if (HasPopulationCapability())
+    if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
     {
         populationEntry = fs::path(sConfigMgr->GetOption<std::string>("Python.Population.EntryScript", ""));
         hasPopulationEntry = !populationEntry.empty();
-        if (IsPopulationProfile() && !hasPopulationEntry)
-        {
-            LOG_ERROR("module.python", "Python.Population.EntryScript must be one relative non-traversing path.");
-            return false;
-        }
         if (hasPopulationEntry &&
             (populationEntry.is_absolute() || ContainsParentTraversal(populationEntry)))
         {
@@ -378,29 +297,69 @@ bool PythonEngine::LoadScripts()
                           requested.string());
                 return false;
             }
-            if (IsPopulationProfile())
-                scriptFiles.assign(1, *found);
         }
     }
 
-    // Lock ordering is always hook lock before GIL. Existing callbacks finish
-    // first; candidate Python objects are created and destroyed while the GIL
-    // is held. The active registry/namespace are not changed until publication.
-    std::unique_lock<std::shared_mutex> lock(hookMutex);
+    if (triggerDepth > 0)
+        return false;
     GILGuard gil;
+    CallbackScope scope;
     HookRegistry candidateHookMap;
     SafeEventRegistry candidateSafeEventMap;
     API::Object candidateNamespace;
     API::Object candidatePopulationCallback;
     int count = 0;
-
     try
     {
+        API::Object sys = API::Import("sys");
+        API::Dict modules = boost::python::extract<API::Dict>(sys.attr("modules"));
+        API::Dict previousModules = boost::python::extract<API::Dict>(modules.attr("copy")());
+        API::Object previousPath = API::Import("copy").attr("copy")(sys.attr("path"));
+        sys.attr("path") = API::List(sys.attr("path"));
+        bool published = false;
+        struct ImportRollback
+        {
+            API::Dict& modules;
+            API::Dict& previous;
+            API::Object& sys;
+            API::Object& previousPath;
+            bool& published;
+            ~ImportRollback()
+            {
+                if (!published)
+                {
+                    try
+                    {
+                        modules.clear();
+                        modules.update(previous);
+                        sys.attr("path") = previousPath;
+                    }
+                    catch (...)
+                    {
+                        auto error = ExceptionHelper::Format();
+                        LOG_ERROR("module.python", "Import registry rollback failed: {}", error);
+                    }
+                }
+            }
+        } importRollback{modules, previousModules, sys, previousPath, published};
+
         API::Dict namespaceDictionary;
         namespaceDictionary["__builtins__"] = API::Import("builtins");
         namespaceDictionary["__name__"] = "__main__";
         namespaceDictionary["__script_root__"] = canonicalRoot.string();
         candidateNamespace = namespaceDictionary;
+        // Reload local imports too; rejected candidates restore the prior module registry.
+        API::Exec(R"PY(
+import sys as _engine_sys, pathlib as _engine_pathlib, importlib as _engine_importlib
+_engine_root = _engine_pathlib.Path(__script_root__).resolve()
+for _engine_name, _engine_module in list(_engine_sys.modules.items()):
+    _engine_file = getattr(_engine_module, '__file__', None)
+    if _engine_file and _engine_pathlib.Path(_engine_file).resolve().is_relative_to(_engine_root):
+        del _engine_sys.modules[_engine_name]
+for _engine_cache in _engine_root.rglob('__pycache__/*.pyc'):
+    _engine_cache.unlink()
+_engine_importlib.invalidate_caches()
+)PY", candidateNamespace, candidateNamespace);
 
         API::Object sysPath = API::Import("sys").attr("path");
         API::Object scriptRoot = API::FromString(canonicalRoot.string());
@@ -416,6 +375,7 @@ bool PythonEngine::LoadScripts()
 
             try
             {
+                candidateNamespace["__file__"] = scriptFile.string();
                 API::ExecFile(scriptFile.string(), candidateNamespace, candidateNamespace);
                 count++;
             }
@@ -424,7 +384,8 @@ bool PythonEngine::LoadScripts()
                 candidateRegistrationTarget = nullptr;
                 candidateSafeEventRegistrationTarget = nullptr;
                 LOG_ERROR("module.python", "Failed to execute script: {}", scriptFile.string());
-                LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+                auto error = ExceptionHelper::Format();
+                LOG_ERROR("module.python", "{}", error);
                 LOG_ERROR("module.python", "Candidate reload rejected; the last accepted registry and namespace "
                           "were preserved. Python or external side effects outside those staged objects cannot be "
                           "rolled back.");
@@ -434,7 +395,7 @@ bool PythonEngine::LoadScripts()
         candidateRegistrationTarget = nullptr;
         candidateSafeEventRegistrationTarget = nullptr;
 
-        if (HasPopulationCapability())
+        if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
         {
             API::Dict namespaceDictionary = boost::python::extract<API::Dict>(candidateNamespace);
             if (namespaceDictionary.has_key("population_tick"))
@@ -443,21 +404,23 @@ bool PythonEngine::LoadScripts()
                 if (!API::IsCallable(candidatePopulationCallback))
                     throw std::runtime_error("population_tick is not callable");
             }
-            else if (IsPopulationProfile() || hasPopulationEntry)
+            else if (hasPopulationEntry)
             {
                 throw std::runtime_error("configured population entry did not publish population_tick");
             }
         }
 
+        std::unique_lock<std::shared_mutex> lock(hookMutex);
         hookMap.swap(candidateHookMap);
         safeEventMap.swap(candidateSafeEventMap);
         std::swap(main_namespace, candidateNamespace);
-        if (HasPopulationCapability())
+        if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
         {
             std::swap(populationCallback, candidatePopulationCallback);
             populationHealthy.store(API::IsCallable(populationCallback), std::memory_order_release);
         }
-        safeEventsHealthy.store(HasSafeEventCapability(), std::memory_order_release);
+        safeEventsHealthy.store(true, std::memory_order_release);
+        published = true;
         LOG_INFO("module.python", ">> Published {} Python scripts from canonical root '{}' in {} ms.", count,
                  canonicalRoot.string(), GetMSTimeDiffToNow(oldMSTime));
         return true;
@@ -466,7 +429,8 @@ bool PythonEngine::LoadScripts()
     {
         candidateRegistrationTarget = nullptr;
         candidateSafeEventRegistrationTarget = nullptr;
-        LOG_ERROR("module.python", "Candidate reload failed before publication: {}", ExceptionHelper::Format());
+        auto error = ExceptionHelper::Format();
+        LOG_ERROR("module.python", "Candidate reload failed before publication: {}", error);
         LOG_ERROR("module.python", "The last accepted registry and namespace were preserved; external Python "
                   "side effects are outside the transactional contract.");
         return false;
@@ -475,12 +439,17 @@ bool PythonEngine::LoadScripts()
 
 bool PythonEngine::RunPopulationTick(uint32 diff)
 {
-    if (!enabled.load(std::memory_order_acquire) || !HasPopulationCapability() ||
+    if (!enabled.load(std::memory_order_acquire) || !sConfigMgr->GetOption<bool>("Python.Population.Enabled", false) ||
         reloading.load(std::memory_order_acquire))
         return false;
 
-    std::shared_lock<std::shared_mutex> lock(hookMutex);
-    if (!populationCallback.ptr())
+    GILGuard gil;
+    API::Object callback;
+    {
+        std::shared_lock<std::shared_mutex> lock(hookMutex);
+        callback = populationCallback;
+    }
+    if (API::IsNone(callback))
         return true;
     if (!populationHealthy.load(std::memory_order_acquire))
         return false;
@@ -493,7 +462,7 @@ bool PythonEngine::RunPopulationTick(uint32 diff)
     }
 
     uint32 started = getMSTime();
-    GILGuard gil;
+    CallbackScope scope;
     struct TickGuard
     {
         TickGuard() { populationTickActive = true; triggerDepth++; }
@@ -503,11 +472,12 @@ bool PythonEngine::RunPopulationTick(uint32 diff)
     bool accepted = false;
     try
     {
-        accepted = boost::python::extract<bool>(populationCallback(diff));
+        accepted = boost::python::extract<bool>(callback(diff));
     }
     catch (...)
     {
-        LOG_ERROR("module.python", "population-v1 tick raised an exception: {}", ExceptionHelper::Format());
+        auto error = ExceptionHelper::Format();
+        LOG_ERROR("module.python", "population-v1 tick raised an exception: {}", error);
     }
     uint32 elapsed = GetMSTimeDiffToNow(started);
     uint32 maximum = sConfigMgr->GetOption<uint32>("Python.Population.MaxTickMilliseconds", 25);
@@ -526,20 +496,28 @@ bool PythonEngine::RunPopulationTick(uint32 diff)
 
 bool PythonEngine::RegisterSafeEvent(std::string const& eventName, API::Object callback)
 {
-    if (!enabled.load(std::memory_order_acquire) || !HasSafeEventCapability() ||
-        !IsSafeEventName(eventName) || !API::IsCallable(callback) || !candidateSafeEventRegistrationTarget)
+    if (!enabled.load(std::memory_order_acquire) ||
+        !IsSafeEventName(eventName) || !API::IsCallable(callback) ||
+        (IsReloading() && !candidateSafeEventRegistrationTarget))
         return false;
 
     try
     {
-        (*candidateSafeEventRegistrationTarget)[eventName].push_back(callback);
+        if (candidateSafeEventRegistrationTarget)
+            (*candidateSafeEventRegistrationTarget)[eventName].push_back(callback);
+        else
+        {
+            std::unique_lock<std::shared_mutex> lock(hookMutex);
+            safeEventMap[eventName].push_back(callback);
+        }
         LOG_DEBUG("module.python", "Staged safe event '{}'", eventName);
         return true;
     }
     catch (...)
     {
         LOG_ERROR("module.python", "Failed to stage safe event '{}'", eventName);
-        LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+        auto error = ExceptionHelper::Format();
+        LOG_ERROR("module.python", "{}", error);
         return false;
     }
 }
@@ -547,18 +525,21 @@ bool PythonEngine::RegisterSafeEvent(std::string const& eventName, API::Object c
 bool PythonEngine::DispatchSafeEvent(std::string const& eventName,
                                      PyEng::Events::Fields const& fields)
 {
-    if (!enabled.load(std::memory_order_acquire) || !HasSafeEventCapability() ||
+    if (!enabled.load(std::memory_order_acquire) ||
         !IsSafeEventName(eventName) ||
-        !safeEventsHealthy.load(std::memory_order_acquire) || reloading.load(std::memory_order_acquire) ||
+        reloading.load(std::memory_order_acquire) ||
         initializationThread != std::this_thread::get_id() || safeEventDispatchActive)
         return false;
 
-    std::shared_lock<std::shared_mutex> lock(hookMutex);
-    auto callbacks = safeEventMap.find(eventName);
-    if (callbacks == safeEventMap.end())
-        return true;
-
     GILGuard gil;
+    CallbackList callbacks;
+    {
+        std::shared_lock<std::shared_mutex> lock(hookMutex);
+        auto found = safeEventMap.find(eventName);
+        if (found == safeEventMap.end()) return true;
+        callbacks = found->second;
+    }
+    CallbackScope scope;
     struct EventGuard
     {
         EventGuard()
@@ -586,22 +567,21 @@ bool PythonEngine::DispatchSafeEvent(std::string const& eventName,
             }, field.value);
         }
 
-        for (API::Object const& callback : callbacks->second)
+        for (API::Object const& callback : callbacks)
         {
-            API::Object result = callback(payload);
-            if (!API::IsNone(result))
+            try { callback(payload); }
+            catch (...)
             {
-                LOG_ERROR("module.python", "Safe event '{}' returned a value; callbacks must return None.",
-                          eventName);
+                auto error = ExceptionHelper::Format();
+                LOG_ERROR("module.python", "Event '{}' raised an exception: {}", eventName, error);
                 accepted = false;
-                break;
             }
         }
     }
     catch (...)
     {
-        LOG_ERROR("module.python", "Safe event '{}' raised an exception: {}", eventName,
-                  ExceptionHelper::Format());
+        auto error = ExceptionHelper::Format();
+        LOG_ERROR("module.python", "Event '{}' raised an exception: {}", eventName, error);
         accepted = false;
     }
 
@@ -610,10 +590,8 @@ bool PythonEngine::DispatchSafeEvent(std::string const& eventName,
 
     if (!accepted || elapsed > maximum)
     {
-        safeEventsHealthy.store(false, std::memory_order_release);
-        LOG_ERROR("module.python", "Safe event '{}' disabled after result={} elapsed={}ms maximum={}ms. "
-                  "In-process Python cannot be preempted while hung.",
-                  eventName, accepted, elapsed, maximum);
+        LOG_WARN("module.python", "Event '{}' returned result={} after {}ms (observation threshold {}ms).",
+                 eventName, accepted, elapsed, maximum);
         return false;
     }
     return true;
@@ -625,9 +603,9 @@ bool PythonEngine::RegisterHook(std::string const& eventName, API::Object callba
     if (!enabled.load(std::memory_order_acquire) || eventName.empty())
         return false;
 
-    if (!IsUnsafeDevelopmentProfile())
+    if (IsReloading() && !candidateRegistrationTarget)
     {
-        LOG_ERROR("module.python", "Hook registration '{}' is disabled by safe-static-v1 policy.", eventName);
+        LOG_ERROR("module.python", "Hook '{}' registration raced a reload; retry after publication.", eventName);
         return false;
     }
 
@@ -666,26 +644,23 @@ bool PythonEngine::RegisterHook(std::string const& eventName, API::Object callba
 
     HookInfo hookId = hookIdOpt.value();
 
-    // Registrations are accepted only into the thread-local candidate registry
-    // while LoadScripts holds the exclusive hook lock. Runtime/dynamic mutation
-    // of the published registry is forbidden.
-    if (!candidateRegistrationTarget)
-    {
-        LOG_ERROR("module.python", "Hook '{}' registration attempted outside a staged script load; rejected.",
-                  eventName);
-        return false;
-    }
-
     try
     {
-        (*candidateRegistrationTarget)[hookId][entryId].push_back(callback);
+        if (candidateRegistrationTarget)
+            (*candidateRegistrationTarget)[hookId][entryId].push_back(callback);
+        else
+        {
+            std::unique_lock<std::shared_mutex> lock(hookMutex);
+            hookMap[hookId][entryId].push_back(callback);
+        }
         LOG_DEBUG("module.python", "Staged hook '{}' (entry {})", eventName, entryId);
         return true;
     }
     catch (...)
     {
         LOG_ERROR("module.python", "Failed to register hook '{}' (entry {})", eventName, entryId);
-        LOG_ERROR("module.python", "{}", ExceptionHelper::Format());
+        auto error = ExceptionHelper::Format();
+        LOG_ERROR("module.python", "{}", error);
         return false;
     }
 }
@@ -696,19 +671,13 @@ ExecutionResult PythonEngine::ExecuteCode(std::string const& code)
     if (!enabled.load(std::memory_order_acquire))
         return ExecutionResult::Error("Python Engine is disabled");
 
-    if (!IsUnsafeDevelopmentProfile() || !IsExecCommandAllowed())
-        return ExecutionResult::Error("Python exec is available only in the explicitly acknowledged unsafe "
-                                      "development profile");
-
     if (triggerDepth > 0)
         return ExecutionResult::Error("Cannot execute while hooks are running");
 
-    // Try to acquire exclusive lock
-    std::unique_lock<std::shared_mutex> lock(hookMutex, std::defer_lock);
-    if (!lock.try_lock())
-        return ExecutionResult::Error("Python engine is busy");
-
+    if (IsReloading())
+        return ExecutionResult::Error("Python engine is reloading");
     GILGuard gil;
+    CallbackScope scope;
 
     try
     {

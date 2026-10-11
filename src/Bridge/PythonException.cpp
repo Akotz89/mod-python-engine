@@ -27,6 +27,8 @@ namespace PyEng::Bridge
         Py_XDECREF(excValue);
         Py_XDECREF(excTraceback);
 
+        // Formatting an owner's exception may itself raise (for example a broken __str__).
+        PyErr_Clear();
         return oss.str();
     }
 
@@ -89,15 +91,22 @@ namespace PyEng::Bridge
 
         PyCodeObject* code = PyFrame_GetCode((PyFrameObject*)frame);
         if (!code)
+        {
+            PyErr_Clear();
             return "";
+        }
 
         // Extract filename
         char const* filenameStr = PyUnicode_AsUTF8(code->co_filename);
         std::string filename = filenameStr ? filenameStr : "<unknown>";
+        if (!filenameStr)
+            PyErr_Clear();
 
         // Extract function name
         char const* nameStr = PyUnicode_AsUTF8(code->co_name);
         std::string funcName = nameStr ? nameStr : "<unknown>";
+        if (!nameStr)
+            PyErr_Clear();
 
         // Get line number
         int lineNumber = PyFrame_GetLineNumber((PyFrameObject*)frame);
@@ -117,10 +126,15 @@ namespace PyEng::Bridge
 
         PyObject* str = PyObject_Str(obj);
         if (!str)
-            return "";
+        {
+            PyErr_Clear();
+            return "<exception message unavailable>";
+        }
 
         char const* cstr = PyUnicode_AsUTF8(str);
-        std::string result = cstr ? cstr : "";
+        std::string result = cstr ? cstr : "<exception message unavailable>";
+        if (!cstr)
+            PyErr_Clear();
         Py_DECREF(str);
 
         return result;

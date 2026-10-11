@@ -1,272 +1,303 @@
-hook_name,category,hook_id,declared,forwarded,safe_static_v1,unsafe_development_v1,risk_tags,declaration,forwarders
-ACCOUNT_ON_ACCOUNT_LOGIN,ACCOUNT,0,yes,yes,disabled-by-policy,available,session-path,src/Hooks/Defines/AccountHook.h:10,src/Scripts/AccountScript.cpp:16
-ACCOUNT_ON_BEFORE_ACCOUNT_DELETE,ACCOUNT,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:11,
-ACCOUNT_ON_LAST_IP_UPDATE,ACCOUNT,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:12,
-ACCOUNT_ON_FAILED_ACCOUNT_LOGIN,ACCOUNT,3,yes,yes,disabled-by-policy,available,session-path,src/Hooks/Defines/AccountHook.h:13,src/Scripts/AccountScript.cpp:26
-ACCOUNT_ON_EMAIL_CHANGE,ACCOUNT,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:14,
-ACCOUNT_ON_FAILED_EMAIL_CHANGE,ACCOUNT,5,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:15,
-ACCOUNT_ON_PASSWORD_CHANGE,ACCOUNT,6,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:16,
-ACCOUNT_ON_FAILED_PASSWORD_CHANGE,ACCOUNT,7,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:17,
-ACCOUNT_CAN_ACCOUNT_CREATE_CHARACTER,ACCOUNT,8,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AccountHook.h:18,
-ACHIEVEMENT_SET_REALM_COMPLETED,ACHIEVEMENT,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AchievementHook.h:10,
-ACHIEVEMENT_IS_COMPLETED_CRITERIA,ACHIEVEMENT,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AchievementHook.h:11,
-ACHIEVEMENT_IS_REALM_COMPLETED,ACHIEVEMENT,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AchievementHook.h:12,
-ACHIEVEMENT_ON_BEFORE_CHECK_CRITERIA,ACHIEVEMENT,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AchievementHook.h:13,
-ACHIEVEMENT_CAN_CHECK_CRITERIA,ACHIEVEMENT,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/AchievementHook.h:14,
-ARENA_CAN_ADD_MEMBER,ARENA,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:10,
-ARENA_ON_GET_POINTS,ARENA,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:11,
-ARENA_CAN_SAVE_TO_DB,ARENA,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:12,
-ARENA_ON_BEFORE_CHECK_WIN_CONDITION,ARENA,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:13,
-ARENA_ON_ARENA_START,ARENA,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:14,
-ARENA_ON_BEFORE_TEAM_MEMBER_UPDATE,ARENA,5,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:15,
-ARENA_CAN_SAVE_ARENA_STATS_FOR_MEMBER,ARENA,6,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaHook.h:16,
-ARENATEAM_ON_GET_SLOT_BY_TYPE,ARENATEAM,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaTeamHook.h:10,
-ARENATEAM_ON_GET_ARENA_POINTS,ARENATEAM,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaTeamHook.h:11,
-ARENATEAM_ON_TYPEID_TO_QUEUEID,ARENATEAM,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaTeamHook.h:12,
-ARENATEAM_ON_QUEUEID_TO_ARENA_TYPE,ARENATEAM,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaTeamHook.h:13,
-ARENATEAM_ON_SET_ARENA_MAX_PLAYERS_PER_TEAM,ARENATEAM,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ArenaTeamHook.h:14,
-CREATURE_ON_GOSSIP_HELLO,CREATURE,0,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:10,src/Scripts/CreatureScript.cpp:28
-CREATURE_ON_GOSSIP_SELECT,CREATURE,1,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:11,src/Scripts/CreatureScript.cpp:43
-CREATURE_ON_GOSSIP_SELECT_CODE,CREATURE,2,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:12,src/Scripts/CreatureScript.cpp:59
-CREATURE_ON_QUEST_ACCEPT,CREATURE,3,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:13,src/Scripts/CreatureScript.cpp:73
-CREATURE_ON_QUEST_SELECT,CREATURE,4,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:14,src/Scripts/CreatureScript.cpp:87
-CREATURE_ON_QUEST_COMPLETE,CREATURE,5,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:15,src/Scripts/CreatureScript.cpp:101
-CREATURE_ON_QUEST_REWARD,CREATURE,6,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:16,src/Scripts/CreatureScript.cpp:116
-CREATURE_ON_ADD_WORLD,CREATURE,7,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/CreatureHook.h:17,src/Scripts/CreatureScript.cpp:133
-CREATURE_ON_REMOVE_WORLD,CREATURE,8,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/CreatureHook.h:18,src/Scripts/CreatureScript.cpp:143
-GAMEOBJECT_ON_GOSSIP_HELLO,GAMEOBJECT,0,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:10,src/Scripts/GameObjectScript.cpp:28
-GAMEOBJECT_ON_GOSSIP_SELECT,GAMEOBJECT,1,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:11,src/Scripts/GameObjectScript.cpp:43
-GAMEOBJECT_ON_GOSSIP_SELECT_CODE,GAMEOBJECT,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:12,
-GAMEOBJECT_ON_QUEST_ACCEPT,GAMEOBJECT,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:13,
-GAMEOBJECT_ON_QUEST_REWARD,GAMEOBJECT,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:14,
-GAMEOBJECT_ON_DESTROYED,GAMEOBJECT,5,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:15,src/Scripts/GameObjectScript.cpp:55
-GAMEOBJECT_ON_DAMAGED,GAMEOBJECT,6,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:16,src/Scripts/GameObjectScript.cpp:66
-GAMEOBJECT_ON_MODIFY_HEALTH,GAMEOBJECT,7,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:17,
-GAMEOBJECT_ON_LOOT_STATE_CHANGED,GAMEOBJECT,8,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:18,
-GAMEOBJECT_ON_UPDATE,GAMEOBJECT,9,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:19,
-GAMEOBJECT_ON_ADD_WORLD,GAMEOBJECT,10,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:20,
-GAMEOBJECT_ON_REMOVE_WORLD,GAMEOBJECT,11,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/GameObjectHook.h:21,
-ITEM_ON_QUEST_ACCEPT,ITEM,0,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:10,src/Scripts/ItemScript.cpp:29
-ITEM_ON_USE,ITEM,1,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:11,src/Scripts/ItemScript.cpp:43
-ITEM_ON_EXPIRE,ITEM,2,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:12,src/Scripts/ItemScript.cpp:85
-ITEM_ON_REMOVE,ITEM,3,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:13,src/Scripts/ItemScript.cpp:56
-ITEM_ON_CAST_COMBAT_SPELL,ITEM,4,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:14,src/Scripts/ItemScript.cpp:72
-ITEM_ON_GOSSIPE_SELECT,ITEM,5,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/ItemHook.h:15,src/Scripts/ItemScript.cpp:99
-ITEM_ON_GOSSIPE_SELECT_CODE,ITEM,6,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/ItemHook.h:16,src/Scripts/ItemScript.cpp:113
-PLAYER_ON_PLAYER_JUST_DIED,PLAYER,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:10,
-PLAYER_ON_CALCULATE_TALENTS_POINTS,PLAYER,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:11,
-PLAYER_ON_PLAYER_RELEASED_GHOST,PLAYER,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:12,
-PLAYER_ON_SEND_INITIAL_PACKETS_BEFORE_ADD_TO_MAP,PLAYER,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:13,
-PLAYER_ON_BATTLEGROUND_DESERTION,PLAYER,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:14,
-PLAYER_ON_PLAYER_COMPLETE_QUEST,PLAYER,5,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:15,
-PLAYER_ON_PVP_KILL,PLAYER,6,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:16,src/Scripts/PlayerScript.cpp:38
-PLAYER_ON_PLAYER_PVP_FLAG_CHANGE,PLAYER,7,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:17,
-PLAYER_ON_CREATURE_KILL,PLAYER,8,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:18,
-PLAYER_ON_CREATURE_KILLED_BY_PET,PLAYER,9,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:19,
-PLAYER_ON_PLAYER_KILLED_BY_CREATURE,PLAYER,10,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:20,
-PLAYER_ON_LEVEL_CHANGED,PLAYER,11,yes,yes,disabled-by-policy,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:21,src/Scripts/PlayerScript.cpp:62
-PLAYER_ON_FREE_TALENT_POINTS_CHANGED,PLAYER,12,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:22,
-PLAYER_ON_TALENTS_RESET,PLAYER,13,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:23,
-PLAYER_ON_AFTER_SPEC_SLOT_CHANGED,PLAYER,14,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:24,
-PLAYER_ON_BEFORE_UPDATE,PLAYER,15,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:25,
-PLAYER_ON_UPDATE,PLAYER,16,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:26,
-PLAYER_ON_MONEY_CHANGED,PLAYER,17,yes,yes,disabled-by-policy,available,borrowed-native-object;mutable-authority,src/Hooks/Defines/PlayerHook.h:27,src/Scripts/PlayerScript.cpp:73
-PLAYER_ON_BEFORE_LOOT_MONEY,PLAYER,18,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:28,
-PLAYER_ON_GIVE_EXP,PLAYER,19,yes,yes,disabled-by-policy,available,borrowed-native-object;mutable-authority,src/Hooks/Defines/PlayerHook.h:29,src/Scripts/PlayerScript.cpp:51
-PLAYER_ON_REPUTATION_CHANGE,PLAYER,20,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:30,
-PLAYER_ON_REPUTATION_RANK_CHANGE,PLAYER,21,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:31,
-PLAYER_ON_LEARN_SPELL,PLAYER,22,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:32,
-PLAYER_ON_FORGOT_SPELL,PLAYER,23,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:33,
-PLAYER_ON_DUEL_REQUEST,PLAYER,24,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:34,
-PLAYER_ON_DUEL_START,PLAYER,25,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:35,
-PLAYER_ON_DUEL_END,PLAYER,26,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:36,
-PLAYER_ON_BEFORE_SEND_CHAT_MESSAGE,PLAYER,27,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:37,
-PLAYER_ON_EMOTE,PLAYER,28,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:38,
-PLAYER_ON_TEXT_EMOTE,PLAYER,29,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:39,
-PLAYER_ON_SPELL_CAST,PLAYER,30,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:40,
-PLAYER_ON_LOAD_FROM_DB,PLAYER,31,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:41,
-PLAYER_ON_LOGIN,PLAYER,32,yes,yes,disabled-by-policy,available,borrowed-native-object;session-path,src/Hooks/Defines/PlayerHook.h:42,src/Scripts/PlayerScript.cpp:17
-PLAYER_ON_BEFORE_LOGOUT,PLAYER,33,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:43,
-PLAYER_ON_LOGOUT,PLAYER,34,yes,yes,disabled-by-policy,available,borrowed-native-object;session-path,src/Hooks/Defines/PlayerHook.h:44,src/Scripts/PlayerScript.cpp:27
-PLAYER_ON_CREATE,PLAYER,35,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:45,
-PLAYER_ON_DELETE,PLAYER,36,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:46,
-PLAYER_ON_FAILED_DELETE,PLAYER,37,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:47,
-PLAYER_ON_SAVE,PLAYER,38,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:48,
-PLAYER_ON_BIND_TO_INSTANCE,PLAYER,39,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:49,
-PLAYER_ON_UPDATE_ZONE,PLAYER,40,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:50,
-PLAYER_ON_UPDATE_AREA,PLAYER,41,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:51,
-PLAYER_ON_MAP_CHANGED,PLAYER,42,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:52,
-PLAYER_ON_BEFORE_TELEPORT,PLAYER,43,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:53,
-PLAYER_ON_UPDATE_FACTION,PLAYER,44,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:54,
-PLAYER_ON_ADD_TO_BATTLEGROUND,PLAYER,45,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:55,
-PLAYER_ON_QUEUE_RANDOM_DUNGEON,PLAYER,46,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:56,
-PLAYER_ON_REMOVE_FROM_BATTLEGROUND,PLAYER,47,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:57,
-PLAYER_ON_ACHI_COMPLETE,PLAYER,48,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:58,
-PLAYER_ON_BEFORE_ACHI_COMPLETE,PLAYER,49,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:59,
-PLAYER_ON_CRITERIA_PROGRESS,PLAYER,50,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:60,
-PLAYER_ON_BEFORE_CRITERIA_PROGRESS,PLAYER,51,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:61,
-PLAYER_ON_ACHI_SAVE,PLAYER,52,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:62,
-PLAYER_ON_CRITERIA_SAVE,PLAYER,53,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:63,
-PLAYER_ON_GOSSIP_SELECT,PLAYER,54,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:64,
-PLAYER_ON_GOSSIP_SELECT_CODE,PLAYER,55,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:65,
-PLAYER_ON_BEING_CHARMED,PLAYER,56,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:66,
-PLAYER_ON_AFTER_SET_VISIBLE_ITEM_SLOT,PLAYER,57,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:67,
-PLAYER_ON_AFTER_MOVE_ITEM_FROM_INVENTORY,PLAYER,58,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:68,
-PLAYER_ON_EQUIP,PLAYER,59,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:69,
-PLAYER_ON_PLAYER_JOIN_BG,PLAYER,60,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:70,
-PLAYER_ON_PLAYER_JOIN_ARENA,PLAYER,61,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:71,
-PLAYER_GET_CUSTOM_GET_ARENA_TEAM_ID,PLAYER,62,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:72,
-PLAYER_GET_CUSTOM_ARENA_PERSONAL_RATING,PLAYER,63,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:73,
-PLAYER_ON_GET_MAX_PERSONAL_ARENA_RATING_REQUIREMENT,PLAYER,64,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:74,
-PLAYER_ON_LOOT_ITEM,PLAYER,65,yes,yes,disabled-by-policy,available,borrowed-native-object;economy-path,src/Hooks/Defines/PlayerHook.h:75,src/Scripts/PlayerScript.cpp:86
-PLAYER_ON_BEFORE_FILL_QUEST_LOOT_ITEM,PLAYER,66,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:76,
-PLAYER_ON_STORE_NEW_ITEM,PLAYER,67,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:77,
-PLAYER_ON_CREATE_ITEM,PLAYER,68,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:78,
-PLAYER_ON_QUEST_REWARD_ITEM,PLAYER,69,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:79,
-PLAYER_CAN_PLACE_AUCTION_BID,PLAYER,70,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:80,
-PLAYER_ON_GROUP_ROLL_REWARD_ITEM,PLAYER,71,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:81,
-PLAYER_ON_BEFORE_OPEN_ITEM,PLAYER,72,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:82,
-PLAYER_ON_BEFORE_QUEST_COMPLETE,PLAYER,73,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:83,
-PLAYER_ON_QUEST_COMPUTE_EXP,PLAYER,74,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:84,
-PLAYER_ON_BEFORE_DURABILITY_REPAIR,PLAYER,75,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:85,
-PLAYER_ON_BEFORE_BUY_ITEM_FROM_VENDOR,PLAYER,76,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:86,
-PLAYER_ON_BEFORE_STORE_OR_EQUIP_NEW_ITEM,PLAYER,77,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:87,
-PLAYER_ON_AFTER_STORE_OR_EQUIP_NEW_ITEM,PLAYER,78,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:88,
-PLAYER_ON_AFTER_UPDATE_MAX_POWER,PLAYER,79,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:89,
-PLAYER_ON_AFTER_UPDATE_MAX_HEALTH,PLAYER,80,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:90,
-PLAYER_ON_BEFORE_UPDATE_ATTACK_POWER_AND_DAMAGE,PLAYER,81,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:91,
-PLAYER_ON_AFTER_UPDATE_ATTACK_POWER_AND_DAMAGE,PLAYER,82,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:92,
-PLAYER_ON_BEFORE_INIT_TALENT_FOR_LEVEL,PLAYER,83,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:93,
-PLAYER_ON_FIRST_LOGIN,PLAYER,84,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:94,
-PLAYER_ON_SET_MAX_LEVEL,PLAYER,85,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:95,
-PLAYER_CAN_JOIN_IN_BATTLEGROUND_QUEUE,PLAYER,86,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:96,
-PLAYER_SHOULD_BE_REWARDED_WITH_MONEY_INSTEAD_OF_EXP,PLAYER,87,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:97,
-PLAYER_ON_BEFORE_TEMP_SUMMON_INIT_STATS,PLAYER,88,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:98,
-PLAYER_ON_BEFORE_GUARDIAN_INIT_STATS_FOR_LEVEL,PLAYER,89,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:99,
-PLAYER_ON_AFTER_GUARDIAN_INIT_STATS_FOR_LEVEL,PLAYER,90,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:100,
-PLAYER_ON_BEFORE_LOAD_PET_FROM_DB,PLAYER,91,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:101,
-PLAYER_CAN_JOIN_IN_ARENA_QUEUE,PLAYER,92,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:102,
-PLAYER_CAN_BATTLEFIELD_PORT,PLAYER,93,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:103,
-PLAYER_CAN_GROUP_INVITE,PLAYER,94,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:104,
-PLAYER_CAN_GROUP_ACCEPT,PLAYER,95,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:105,
-PLAYER_CAN_SELL_ITEM,PLAYER,96,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:106,
-PLAYER_CAN_SEND_MAIL,PLAYER,97,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:107,
-PLAYER_PETITION_BUY,PLAYER,98,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:108,
-PLAYER_PETITION_SHOW_LIST,PLAYER,99,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:109,
-PLAYER_ON_REWARD_KILL_REWARDER,PLAYER,100,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:110,
-PLAYER_CAN_GIVE_MAIL_REWARD_AT_GIVE_LEVEL,PLAYER,101,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:111,
-PLAYER_ON_DELETE_FROM_DB,PLAYER,102,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:112,
-PLAYER_CAN_REPOP_AT_GRAVEYARD,PLAYER,103,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:113,
-PLAYER_ON_PLAYER_IS_CLASS,PLAYER,104,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:114,
-PLAYER_ON_GET_MAX_SKILL_VALUE,PLAYER,105,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:115,
-PLAYER_ON_PLAYER_HAS_ACTIVE_POWER_TYPE,PLAYER,106,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:116,
-PLAYER_ON_UPDATE_GATHERING_SKILL,PLAYER,107,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:117,
-PLAYER_ON_UPDATE_CRAFTING_SKILL,PLAYER,108,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:118,
-PLAYER_ON_UPDATE_FISHING_SKILL,PLAYER,109,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:119,
-PLAYER_CAN_AREA_EXPLORE_AND_OUTDOOR,PLAYER,110,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:120,
-PLAYER_ON_VICTIM_REWARD_BEFORE,PLAYER,111,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:121,
-PLAYER_ON_VICTIM_REWARD_AFTER,PLAYER,112,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:122,
-PLAYER_ON_CUSTOM_SCALING_STAT_VALUE_BEFORE,PLAYER,113,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:123,
-PLAYER_ON_CUSTOM_SCALING_STAT_VALUE,PLAYER,114,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:124,
-PLAYER_ON_APPLY_ITEM_MODS_BEFORE,PLAYER,115,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:125,
-PLAYER_ON_APPLY_ENCHANTMENT_ITEM_MODS_BEFORE,PLAYER,116,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:126,
-PLAYER_ON_APPLY_WEAPON_DAMAGE,PLAYER,117,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:127,
-PLAYER_CAN_ARMOR_DAMAGE_MODIFIER,PLAYER,118,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:128,
-PLAYER_ON_GET_FERAL_AP_BONUS,PLAYER,119,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:129,
-PLAYER_CAN_APPLY_WEAPON_DEPENDENT_AURA_DAMAGE_MOD,PLAYER,120,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:130,
-PLAYER_CAN_APPLY_EQUIP_SPELL,PLAYER,121,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:131,
-PLAYER_CAN_APPLY_EQUIP_SPELLS_ITEM_SET,PLAYER,122,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:132,
-PLAYER_CAN_CAST_ITEM_COMBAT_SPELL,PLAYER,123,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:133,
-PLAYER_CAN_CAST_ITEM_USE_SPELL,PLAYER,124,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:134,
-PLAYER_ON_APPLY_AMMO_BONUSES,PLAYER,125,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:135,
-PLAYER_CAN_EQUIP_ITEM,PLAYER,126,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:136,
-PLAYER_CAN_UNEQUIP_ITEM,PLAYER,127,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:137,
-PLAYER_CAN_USE_ITEM,PLAYER,128,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:138,
-PLAYER_CAN_SAVE_EQUIP_NEW_ITEM,PLAYER,129,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:139,
-PLAYER_CAN_APPLY_ENCHANTMENT,PLAYER,130,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:140,
-PLAYER_PASSED_QUEST_KILLED_MONSTER_CREDIT,PLAYER,131,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:141,
-PLAYER_CHECK_ITEM_IN_SLOT_AT_LOAD_INVENTORY,PLAYER,132,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:142,
-PLAYER_NOT_AVOID_SATISFY,PLAYER,133,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:143,
-PLAYER_NOT_VISIBLE_GLOBALLY_FOR,PLAYER,134,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:144,
-PLAYER_ON_GET_ARENA_PERSONAL_RATING,PLAYER,135,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:145,
-PLAYER_ON_GET_ARENA_TEAM_ID,PLAYER,136,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:146,
-PLAYER_ON_IS_FFA_PVP,PLAYER,137,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:147,
-PLAYER_ON_FFA_PVP_STATE_UPDATE,PLAYER,138,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:148,
-PLAYER_ON_IS_PVP,PLAYER,139,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:149,
-PLAYER_ON_GET_MAX_SKILL_VALUE_FOR_LEVEL,PLAYER,140,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:150,
-PLAYER_NOT_SET_ARENA_TEAM_INFO_FIELD,PLAYER,141,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:151,
-PLAYER_CAN_JOIN_LFG,PLAYER,142,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:152,
-PLAYER_CAN_ENTER_MAP,PLAYER,143,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:153,
-PLAYER_CAN_INIT_TRADE,PLAYER,144,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:154,
-PLAYER_CAN_SET_TRADE_ITEM,PLAYER,145,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:155,
-PLAYER_ON_SET_SERVER_SIDE_VISIBILITY,PLAYER,146,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:156,
-PLAYER_ON_SET_SERVER_SIDE_VISIBILITY_DETECT,PLAYER,147,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:157,
-PLAYER_ON_PLAYER_RESURRECT,PLAYER,148,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:158,
-PLAYER_ON_BEFORE_CHOOSE_GRAVEYARD,PLAYER,149,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:159,
-PLAYER_CAN_PLAYER_USE_CHAT,PLAYER,150,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:160,
-PLAYER_CAN_PLAYER_USE_PRIVATE_CHAT,PLAYER,151,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:161,
-PLAYER_CAN_PLAYER_USE_GROUP_CHAT,PLAYER,152,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:162,
-PLAYER_CAN_PLAYER_USE_GUILD_CHAT,PLAYER,153,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:163,
-PLAYER_CAN_PLAYER_USE_CHANNEL_CHAT,PLAYER,154,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:164,
-PLAYER_ON_PLAYER_LEARN_TALENTS,PLAYER,155,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:165,
-PLAYER_ON_PLAYER_ENTER_COMBAT,PLAYER,156,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:166,
-PLAYER_ON_PLAYER_LEAVE_COMBAT,PLAYER,157,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:167,
-PLAYER_ON_QUEST_ABANDON,PLAYER,158,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:168,
-PLAYER_ON_GET_QUEST_RATE,PLAYER,159,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:169,
-PLAYER_ON_CAN_PLAYER_FLY_IN_ZONE,PLAYER,160,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:170,
-PLAYER_ANTICHEAT_SET_CAN_FLY_BY_SERVER,PLAYER,161,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:171,
-PLAYER_ANTICHEAT_SET_UNDER_ACK_MOUNT,PLAYER,162,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:172,
-PLAYER_ANTICHEAT_SET_ROOT_ACK_UPD,PLAYER,163,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:173,
-PLAYER_ANTICHEAT_SET_JUMPING_BY_OPCODE,PLAYER,164,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:174,
-PLAYER_ANTICHEAT_UPDATE_MOVEMENT_INFO,PLAYER,165,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:175,
-PLAYER_ANTICHEAT_HANDLE_DOUBLE_JUMP,PLAYER,166,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:176,
-PLAYER_ANTICHEAT_CHECK_MOVEMENT_INFO,PLAYER,167,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:177,
-PLAYER_CAN_SEND_ERROR_ALREADY_LOOTED,PLAYER,168,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:178,
-PLAYER_ON_AFTER_CREATURE_LOOT,PLAYER,169,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:179,
-PLAYER_ON_AFTER_CREATURE_LOOT_MONEY,PLAYER,170,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:180,
-PLAYER_ON_CAN_UPDATE_SKILL,PLAYER,171,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:181,
-PLAYER_ON_BEFORE_UPDATE_SKILL,PLAYER,172,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:182,
-PLAYER_ON_UPDATE_SKILL,PLAYER,173,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:183,
-PLAYER_CAN_RESURRECT,PLAYER,174,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:184,
-PLAYER_ON_CAN_GIVE_LEVEL,PLAYER,175,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:185,
-PLAYER_ON_SEND_LIST_INVENTORY,PLAYER,176,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:186,
-PLAYER_ON_GIVE_REPUTATION,PLAYER,177,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/PlayerHook.h:187,
-SERVER_ON_NETWORK_START,SERVER,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:10,
-SERVER_ON_NETWORK_STOP,SERVER,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:11,
-SERVER_ON_SOCKET_OPEN,SERVER,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:12,
-SERVER_ON_SOCKET_CLOSE,SERVER,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:13,
-SERVER_CAN_PACKET_SEND,SERVER,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:14,
-SERVER_CAN_PACKET_RECEIVE,SERVER,5,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/ServerHook.h:15,
-UNIT_ON_HEAL,UNIT,0,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:10,src/Scripts/UnitScript.cpp:11
-UNIT_ON_DAMAGE,UNIT,1,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:11,src/Scripts/UnitScript.cpp:16
-UNIT_MODIFY_PERIODIC_DAMAGE_AURAS_TICK,UNIT,2,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:12,src/Scripts/UnitScript.cpp:23
-UNIT_MODIFY_MELEE_DAMAGE,UNIT,3,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:13,src/Scripts/UnitScript.cpp:29
-UNIT_MODIFY_SPELL_DAMAGE_TAKEN,UNIT,4,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:14,src/Scripts/UnitScript.cpp:35
-UNIT_MODIFY_HEAL_RECEIVED,UNIT,5,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:15,src/Scripts/UnitScript.cpp:41
-UNIT_ON_BEFORE_ROLL_MELEE_OUTCOME_AGAINST,UNIT,6,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:16,src/Scripts/UnitScript.cpp:50
-UNIT_ON_AURA_APPLY,UNIT,7,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:17,src/Scripts/UnitScript.cpp:57
-UNIT_ON_AURA_REMOVE,UNIT,8,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:18,src/Scripts/UnitScript.cpp:61
-UNIT_IF_NORMAL_REACTION,UNIT,9,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:19,src/Scripts/UnitScript.cpp:66
-UNIT_CAN_SET_PHASE_MASK,UNIT,10,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:20,src/Scripts/UnitScript.cpp:72
-UNIT_IS_CUSTOM_BUILD_VALUES_UPDATE,UNIT,11,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:21,src/Scripts/UnitScript.cpp:79
-UNIT_SHOULD_TRACK_VALUES_UPDATE_POS_BY_INDEX,UNIT,12,yes,yes,disabled-by-policy,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:22,src/Scripts/UnitScript.cpp:85
-UNIT_ON_PATCH_VALUES_UPDATE,UNIT,13,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:23,src/Scripts/UnitScript.cpp:92
-UNIT_ON_UNIT_UPDATE,UNIT,14,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:24,src/Scripts/UnitScript.cpp:95
-UNIT_ON_DISPLAYID_CHANGE,UNIT,15,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:25,src/Scripts/UnitScript.cpp:97
-UNIT_ON_UNIT_ENTER_EVADE_MODE,UNIT,16,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:26,src/Scripts/UnitScript.cpp:99
-UNIT_ON_UNIT_ENTER_COMBAT,UNIT,17,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:27,src/Scripts/UnitScript.cpp:101
-UNIT_ON_UNIT_DEATH,UNIT,18,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:28,src/Scripts/UnitScript.cpp:103
-UNIT_ON_UNIT_SET_SHAPESHIFT_FORM,UNIT,19,yes,yes,disabled-by-policy,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:29,src/Scripts/UnitScript.cpp:105
-WORLD_ON_OPEN_STATE_CHANGE,WORLD,0,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:10,
-WORLD_ON_AFTER_CONFIG_LOAD,WORLD,1,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:11,
-WORLD_ON_LOAD_CUSTOM_DATABASE_TABLE,WORLD,2,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:12,
-WORLD_ON_BEFORE_CONFIG_LOAD,WORLD,3,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:13,
-WORLD_ON_MOTD_CHANGE,WORLD,4,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:14,
-WORLD_ON_SHUTDOWN_INITIATE,WORLD,5,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:15,
-WORLD_ON_SHUTDOWN_CANCEL,WORLD,6,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:16,
-WORLD_ON_UPDATE,WORLD,7,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:17,
-WORLD_ON_STARTUP,WORLD,8,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:18,
-WORLD_ON_SHUTDOWN,WORLD,9,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:19,
-WORLD_ON_AFTER_UNLOAD_ALL_MAPS,WORLD,10,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:20,
-WORLD_ON_BEFORE_FINALIZE_PLAYER_WORLD_SESSION,WORLD,11,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:21,
-WORLD_ON_BEFORE_WORLD_INITIALIZED,WORLD,12,yes,no,unsupported,unsupported,unwired,src/Hooks/Defines/WorldHook.h:22,
+hook_name,category,hook_id,declared,forwarded,availability,risk_tags,declaration,forwarders,callback_signature,return_semantics
+ACCOUNT_ON_ACCOUNT_LOGIN,ACCOUNT,0,yes,yes,available,session-path,src/Hooks/Defines/AccountHook.h:10,src/Scripts/AccountScript.cpp:29,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_BEFORE_ACCOUNT_DELETE,ACCOUNT,1,yes,yes,available,,src/Hooks/Defines/AccountHook.h:11,src/Scripts/AccountScript.cpp:34,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_LAST_IP_UPDATE,ACCOUNT,2,yes,yes,available,,src/Hooks/Defines/AccountHook.h:12,src/Scripts/AccountScript.cpp:39,"(uint32 accountId, std::string ip)",notification; return ignored
+ACCOUNT_ON_FAILED_ACCOUNT_LOGIN,ACCOUNT,3,yes,yes,available,session-path,src/Hooks/Defines/AccountHook.h:13,src/Scripts/AccountScript.cpp:44,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_EMAIL_CHANGE,ACCOUNT,4,yes,yes,available,,src/Hooks/Defines/AccountHook.h:14,src/Scripts/AccountScript.cpp:49,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_FAILED_EMAIL_CHANGE,ACCOUNT,5,yes,yes,available,,src/Hooks/Defines/AccountHook.h:15,src/Scripts/AccountScript.cpp:54,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_PASSWORD_CHANGE,ACCOUNT,6,yes,yes,available,,src/Hooks/Defines/AccountHook.h:16,src/Scripts/AccountScript.cpp:59,(uint32 accountId),notification; return ignored
+ACCOUNT_ON_FAILED_PASSWORD_CHANGE,ACCOUNT,7,yes,yes,available,,src/Hooks/Defines/AccountHook.h:17,src/Scripts/AccountScript.cpp:64,(uint32 accountId),notification; return ignored
+ACCOUNT_CAN_ACCOUNT_CREATE_CHARACTER,ACCOUNT,8,yes,yes,available,,src/Hooks/Defines/AccountHook.h:18,src/Scripts/AccountScript.cpp:69,"(uint32 accountId, uint8 charRace, uint8 charClass)",permit; AND; default True
+ACHIEVEMENT_SET_REALM_COMPLETED,ACHIEVEMENT,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/AchievementHook.h:10,src/Scripts/AchievementScript.cpp:29,(AchievementEntry const* achievement),notification; return ignored
+ACHIEVEMENT_IS_COMPLETED_CRITERIA,ACHIEVEMENT,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/AchievementHook.h:11,src/Scripts/AchievementScript.cpp:34,"(AchievementMgr* mgr, AchievementCriteriaEntry const* achievementCriteria, AchievementEntry const* achievement, CriteriaProgress const* progress)",permit; AND; default True
+ACHIEVEMENT_IS_REALM_COMPLETED,ACHIEVEMENT,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/AchievementHook.h:12,src/Scripts/AchievementScript.cpp:39,"(AchievementGlobalMgr const* globalmgr, AchievementEntry const* achievement, SystemTimePoint completionTime)",permit; AND; default True
+ACHIEVEMENT_ON_BEFORE_CHECK_CRITERIA,ACHIEVEMENT,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/AchievementHook.h:13,src/Scripts/AchievementScript.cpp:44,"(AchievementMgr* mgr, std::list<AchievementCriteriaEntry const*> const* achievementCriteriaList)",notification; return ignored
+ACHIEVEMENT_CAN_CHECK_CRITERIA,ACHIEVEMENT,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/AchievementHook.h:14,src/Scripts/AchievementScript.cpp:49,"(AchievementMgr* mgr, AchievementCriteriaEntry const* achievementCriteria)",permit; AND; default True
+ARENA_CAN_ADD_MEMBER,ARENA,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:10,src/Scripts/ArenaScript.cpp:29,"(ArenaTeam* team, ObjectGuid PlayerGuid)",permit; AND; default True
+ARENA_ON_GET_POINTS,ARENA,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:11,src/Scripts/ArenaScript.cpp:34,"(ArenaTeam* team, uint32 memberRating, float& points)",notification; return ignored
+ARENA_CAN_SAVE_TO_DB,ARENA,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:12,src/Scripts/ArenaScript.cpp:39,(ArenaTeam* team),permit; AND; default True
+ARENA_ON_BEFORE_CHECK_WIN_CONDITION,ARENA,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:13,src/Scripts/ArenaScript.cpp:44,(Battleground* const bg ),permit; AND; default True
+ARENA_ON_ARENA_START,ARENA,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:14,src/Scripts/ArenaScript.cpp:49,(Battleground* bg ),notification; return ignored
+ARENA_ON_BEFORE_TEAM_MEMBER_UPDATE,ARENA,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:15,src/Scripts/ArenaScript.cpp:54,"(ArenaTeam* team, Player* player, bool won, uint32 opponentMatchmakerRating, int32 matchmakerChange)",permit; AND; default True
+ARENA_CAN_SAVE_ARENA_STATS_FOR_MEMBER,ARENA,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:16,src/Scripts/ArenaScript.cpp:59,"(ArenaTeam* team, ObjectGuid playerGuid)",permit; AND; default True
+ARENA_ON_GET_START_PERSONAL_RATING,ARENA,7,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaHook.h:17,src/Scripts/ArenaScript.cpp:64,"(ArenaTeam* team, ObjectGuid playerGuid, uint32& personalRating)",notification; return ignored
+ARENATEAM_ON_GET_SLOT_BY_TYPE,ARENATEAM,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaTeamHook.h:10,src/Scripts/ArenaTeamScript.cpp:29,"(const uint32 type, uint8& slot)",notification; return ignored
+ARENATEAM_ON_GET_ARENA_POINTS,ARENATEAM,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaTeamHook.h:11,src/Scripts/ArenaTeamScript.cpp:34,"(ArenaTeam* team, float& points)",notification; return ignored
+ARENATEAM_ON_TYPEID_TO_QUEUEID,ARENATEAM,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaTeamHook.h:12,src/Scripts/ArenaTeamScript.cpp:39,"(const BattlegroundTypeId bgTypeId, const uint8 arenaType, uint32& queueTypeID)",notification; return ignored
+ARENATEAM_ON_QUEUEID_TO_ARENA_TYPE,ARENATEAM,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaTeamHook.h:13,src/Scripts/ArenaTeamScript.cpp:44,"(const BattlegroundQueueTypeId bgQueueTypeId, uint8& ArenaType)",notification; return ignored
+ARENATEAM_ON_SET_ARENA_MAX_PLAYERS_PER_TEAM,ARENATEAM,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ArenaTeamHook.h:14,src/Scripts/ArenaTeamScript.cpp:49,"(const uint8 arenaType, uint32& maxPlayerPerTeam)",notification; return ignored
+CREATURE_ON_GOSSIP_HELLO,CREATURE,0,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:10,src/Scripts/CreatureScript.cpp:30,"(Player* player, Creature* creature)",handled/override; OR; default False
+CREATURE_ON_GOSSIP_SELECT,CREATURE,1,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:11,src/Scripts/CreatureScript.cpp:35,"(Player* player, Creature* creature, uint32 sender, uint32 action)",handled/override; OR; default False
+CREATURE_ON_GOSSIP_SELECT_CODE,CREATURE,2,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:12,src/Scripts/CreatureScript.cpp:40,"(Player* player, Creature* creature, uint32 sender, uint32 action, char const* code)",handled/override; OR; default False
+CREATURE_ON_QUEST_ACCEPT,CREATURE,3,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:13,src/Scripts/CreatureScript.cpp:45,"(Player* player, Creature* creature, Quest const* quest)",handled/override; OR; default False
+CREATURE_ON_QUEST_SELECT,CREATURE,4,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:14,src/Scripts/CreatureScript.cpp:50,"(Player* player, Creature* creature, Quest const* quest)",handled/override; OR; default False
+CREATURE_ON_QUEST_COMPLETE,CREATURE,5,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:15,src/Scripts/CreatureScript.cpp:55,"(Player* player, Creature* creature, Quest const* quest)",handled/override; OR; default False
+CREATURE_ON_QUEST_REWARD,CREATURE,6,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/CreatureHook.h:16,src/Scripts/CreatureScript.cpp:60,"(Player* player, Creature* creature, Quest const* quest, uint32 opt)",handled/override; OR; default False
+CREATURE_ON_ADD_WORLD,CREATURE,7,yes,yes,available,borrowed-native-object,src/Hooks/Defines/CreatureHook.h:17,src/Scripts/CreatureScript.cpp:65,(Creature* creature),notification; return ignored
+CREATURE_ON_REMOVE_WORLD,CREATURE,8,yes,yes,available,borrowed-native-object,src/Hooks/Defines/CreatureHook.h:18,src/Scripts/CreatureScript.cpp:70,(Creature* creature),notification; return ignored
+GAMEOBJECT_ON_GOSSIP_HELLO,GAMEOBJECT,0,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:10,src/Scripts/GameObjectScript.cpp:30,"(Player* player, GameObject* go)",handled/override; OR; default False
+GAMEOBJECT_ON_GOSSIP_SELECT,GAMEOBJECT,1,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:11,src/Scripts/GameObjectScript.cpp:35,"(Player* player, GameObject* go, uint32 sender, uint32 action)",handled/override; OR; default False
+GAMEOBJECT_ON_GOSSIP_SELECT_CODE,GAMEOBJECT,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:12,src/Scripts/GameObjectScript.cpp:40,"(Player* player, GameObject* go, uint32 sender, uint32 action, char const* code)",handled/override; OR; default False
+GAMEOBJECT_ON_QUEST_ACCEPT,GAMEOBJECT,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:13,src/Scripts/GameObjectScript.cpp:45,"(Player* player, GameObject* go, Quest const* quest)",handled/override; OR; default False
+GAMEOBJECT_ON_QUEST_REWARD,GAMEOBJECT,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:14,src/Scripts/GameObjectScript.cpp:50,"(Player* player, GameObject* go, Quest const* quest, uint32 opt)",handled/override; OR; default False
+GAMEOBJECT_ON_DESTROYED,GAMEOBJECT,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:15,src/Scripts/GameObjectScript.cpp:55,"(GameObject* go, Player* player)",notification; return ignored
+GAMEOBJECT_ON_DAMAGED,GAMEOBJECT,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:16,src/Scripts/GameObjectScript.cpp:60,"(GameObject* go, Player* player)",notification; return ignored
+GAMEOBJECT_ON_MODIFY_HEALTH,GAMEOBJECT,7,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:17,src/Scripts/GameObjectScript.cpp:65,"(GameObject* go, Unit* attackerOrHealer, int32& change, SpellInfo const* spellInfo)",notification; return ignored
+GAMEOBJECT_ON_LOOT_STATE_CHANGED,GAMEOBJECT,8,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:18,src/Scripts/GameObjectScript.cpp:70,"(GameObject* go, uint32 state, Unit* unit)",notification; return ignored
+GAMEOBJECT_ON_UPDATE,GAMEOBJECT,9,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:19,src/Scripts/GameObjectScript.cpp:75,"(GameObject* go, uint32 diff)",notification; return ignored
+GAMEOBJECT_ON_ADD_WORLD,GAMEOBJECT,10,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:20,src/Scripts/GameObjectScript.cpp:80,(GameObject* go),notification; return ignored
+GAMEOBJECT_ON_REMOVE_WORLD,GAMEOBJECT,11,yes,yes,available,borrowed-native-object,src/Hooks/Defines/GameObjectHook.h:21,src/Scripts/GameObjectScript.cpp:85,(GameObject* go),notification; return ignored
+ITEM_ON_QUEST_ACCEPT,ITEM,0,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:10,src/Scripts/ItemScript.cpp:30,"(Player* player, Item* item, Quest const* quest)",handled/override; OR; default False
+ITEM_ON_USE,ITEM,1,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:11,src/Scripts/ItemScript.cpp:35,"(Player* player, Item* item, SpellCastTargets const& targets)",handled/override; OR; default False
+ITEM_ON_EXPIRE,ITEM,2,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:12,src/Scripts/ItemScript.cpp:40,"(Player* player, ItemTemplate const* proto)",handled/override; OR; default False
+ITEM_ON_REMOVE,ITEM,3,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:13,src/Scripts/ItemScript.cpp:45,"(Player* player, Item* item)",handled/override; OR; default False
+ITEM_ON_CAST_COMBAT_SPELL,ITEM,4,yes,yes,available,authoritative-boolean;borrowed-native-object,src/Hooks/Defines/ItemHook.h:14,src/Scripts/ItemScript.cpp:56,"(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item)",permit; AND; default True
+ITEM_ON_GOSSIPE_SELECT,ITEM,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ItemHook.h:15,src/Scripts/ItemScript.cpp:61,"(Player* player, Item* item, uint32 sender, uint32 action)",notification; return ignored
+ITEM_ON_GOSSIPE_SELECT_CODE,ITEM,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ItemHook.h:16,src/Scripts/ItemScript.cpp:66,"(Player* player, Item* item, uint32 sender, uint32 action, char const* code)",notification; return ignored
+MAP_ON_CREATE_MAP,MAP,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:8,src/Scripts/MapScript.cpp:30,(Map* map),notification; return ignored
+MAP_ON_DESTROY_MAP,MAP,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:9,src/Scripts/MapScript.cpp:35,(Map* map),notification; return ignored
+MAP_ON_PLAYER_ENTER_ALL,MAP,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:10,src/Scripts/MapScript.cpp:45,"(Map* map, Player* player)",notification; return ignored
+MAP_ON_PLAYER_LEAVE_ALL,MAP,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:11,src/Scripts/MapScript.cpp:50,"(Map* map, Player* player)",notification; return ignored
+MAP_ON_MAP_UPDATE,MAP,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:12,src/Scripts/MapScript.cpp:55,"(Map* map, uint32 diff)",notification; return ignored
+MAP_ON_BEFORE_CREATE_INSTANCE_SCRIPT,MAP,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:13,src/Scripts/MapScript.cpp:61;src/Scripts/MapScript.cpp:63,"(InstanceMap* instanceMap, InstanceScript** instanceData, bool load, std::string data, uint32 completedEncounterMask)",notification; return ignored
+MAP_ON_DESTROY_INSTANCE,MAP,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/MapHook.h:14,src/Scripts/MapScript.cpp:68,"(MapInstanced* mapInstanced, Map* map)",notification; return ignored
+PLAYER_ON_PLAYER_JUST_DIED,PLAYER,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:10,src/Scripts/PlayerScript.cpp:30,(Player* player),notification; return ignored
+PLAYER_ON_CALCULATE_TALENTS_POINTS,PLAYER,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:11,src/Scripts/PlayerScript.cpp:35,"(Player const* player, uint32& talentPointsForLevel)",notification; return ignored
+PLAYER_ON_PLAYER_RELEASED_GHOST,PLAYER,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:12,src/Scripts/PlayerScript.cpp:40,(Player* player),notification; return ignored
+PLAYER_ON_SEND_INITIAL_PACKETS_BEFORE_ADD_TO_MAP,PLAYER,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:13,src/Scripts/PlayerScript.cpp:45,"(Player* player, WorldPacket& data)",notification; return ignored
+PLAYER_ON_BATTLEGROUND_DESERTION,PLAYER,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:14,src/Scripts/PlayerScript.cpp:50,"(Player* player, BattlegroundDesertionType const desertionType)",notification; return ignored
+PLAYER_ON_PLAYER_COMPLETE_QUEST,PLAYER,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:15,src/Scripts/PlayerScript.cpp:55,"(Player* player, Quest const* quest_id)",notification; return ignored
+PLAYER_ON_PVP_KILL,PLAYER,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:16,src/Scripts/PlayerScript.cpp:60,"(Player* killer, Player* killed)",notification; return ignored
+PLAYER_ON_PLAYER_PVP_FLAG_CHANGE,PLAYER,7,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:17,src/Scripts/PlayerScript.cpp:65,"(Player* player, bool state)",notification; return ignored
+PLAYER_ON_CREATURE_KILL,PLAYER,8,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:18,src/Scripts/PlayerScript.cpp:70,"(Player* killer, Creature* killed)",notification; return ignored
+PLAYER_ON_CREATURE_KILLED_BY_PET,PLAYER,9,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:19,src/Scripts/PlayerScript.cpp:75,"(Player* PetOwner, Creature* killed)",notification; return ignored
+PLAYER_ON_PLAYER_KILLED_BY_CREATURE,PLAYER,10,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:20,src/Scripts/PlayerScript.cpp:80,"(Creature* killer, Player* killed)",notification; return ignored
+PLAYER_ON_LEVEL_CHANGED,PLAYER,11,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:21,src/Scripts/PlayerScript.cpp:85,"(Player* player, uint8 oldlevel)",notification; return ignored
+PLAYER_ON_FREE_TALENT_POINTS_CHANGED,PLAYER,12,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:22,src/Scripts/PlayerScript.cpp:90,"(Player* player, uint32 points)",notification; return ignored
+PLAYER_ON_TALENTS_RESET,PLAYER,13,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:23,src/Scripts/PlayerScript.cpp:95,"(Player* player, bool noCost)",notification; return ignored
+PLAYER_ON_AFTER_SPEC_SLOT_CHANGED,PLAYER,14,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:24,src/Scripts/PlayerScript.cpp:100,"(Player* player, uint8 newSlot)",notification; return ignored
+PLAYER_ON_BEFORE_UPDATE,PLAYER,15,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:25,src/Scripts/PlayerScript.cpp:105,"(Player* player, uint32 p_time)",notification; return ignored
+PLAYER_ON_UPDATE,PLAYER,16,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:26,src/Scripts/PlayerScript.cpp:110,"(Player* player, uint32 p_time)",notification; return ignored
+PLAYER_ON_MONEY_CHANGED,PLAYER,17,yes,yes,available,borrowed-native-object;mutable-authority,src/Hooks/Defines/PlayerHook.h:27,src/Scripts/PlayerScript.cpp:115,"(Player* player, int32& amount)",notification; return ignored
+PLAYER_ON_BEFORE_LOOT_MONEY,PLAYER,18,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:28,src/Scripts/PlayerScript.cpp:120,"(Player* player, Loot* loot)",notification; return ignored
+PLAYER_ON_GIVE_EXP,PLAYER,19,yes,yes,available,borrowed-native-object;mutable-authority,src/Hooks/Defines/PlayerHook.h:29,src/Scripts/PlayerScript.cpp:125,"(Player* player, uint32& amount, Unit* victim, uint8 xpSource)",notification; return ignored
+PLAYER_ON_REPUTATION_CHANGE,PLAYER,20,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:30,src/Scripts/PlayerScript.cpp:130,"(Player* player, uint32 factionID, int32& standing, bool incremental)",permit; AND; default True
+PLAYER_ON_REPUTATION_RANK_CHANGE,PLAYER,21,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:31,src/Scripts/PlayerScript.cpp:135,"(Player* player, uint32 factionID, ReputationRank newRank, ReputationRank olRank, bool increased)",notification; return ignored
+PLAYER_ON_LEARN_SPELL,PLAYER,22,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:32,src/Scripts/PlayerScript.cpp:140,"(Player* player, uint32 spellID)",notification; return ignored
+PLAYER_ON_FORGOT_SPELL,PLAYER,23,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:33,src/Scripts/PlayerScript.cpp:145,"(Player* player, uint32 spellID)",notification; return ignored
+PLAYER_ON_DUEL_REQUEST,PLAYER,24,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:34,src/Scripts/PlayerScript.cpp:150,"(Player* target, Player* challenger)",notification; return ignored
+PLAYER_ON_DUEL_START,PLAYER,25,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:35,src/Scripts/PlayerScript.cpp:155,"(Player* player1, Player* player2)",notification; return ignored
+PLAYER_ON_DUEL_END,PLAYER,26,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:36,src/Scripts/PlayerScript.cpp:160,"(Player* winner, Player* loser, DuelCompleteType type)",notification; return ignored
+PLAYER_ON_BEFORE_SEND_CHAT_MESSAGE,PLAYER,27,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:37,src/Scripts/PlayerScript.cpp:165,"(Player* player, uint32& type, uint32& lang, std::string& msg)",notification; return ignored
+PLAYER_ON_EMOTE,PLAYER,28,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:38,src/Scripts/PlayerScript.cpp:170,"(Player* player, uint32 emote)",notification; return ignored
+PLAYER_ON_TEXT_EMOTE,PLAYER,29,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:39,src/Scripts/PlayerScript.cpp:175,"(Player* player, uint32 textEmote, uint32 emoteNum, ObjectGuid guid)",notification; return ignored
+PLAYER_ON_SPELL_CAST,PLAYER,30,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:40,src/Scripts/PlayerScript.cpp:180,"(Player* player, Spell* spell, bool skipCheck)",notification; return ignored
+PLAYER_ON_LOAD_FROM_DB,PLAYER,31,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:41,src/Scripts/PlayerScript.cpp:185,(Player* player),notification; return ignored
+PLAYER_ON_LOGIN,PLAYER,32,yes,yes,available,borrowed-native-object;session-path,src/Hooks/Defines/PlayerHook.h:42,src/Scripts/PlayerScript.cpp:190,(Player* player),notification; return ignored
+PLAYER_ON_BEFORE_LOGOUT,PLAYER,33,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:43,src/Scripts/PlayerScript.cpp:195,(Player* player),notification; return ignored
+PLAYER_ON_LOGOUT,PLAYER,34,yes,yes,available,borrowed-native-object;session-path,src/Hooks/Defines/PlayerHook.h:44,src/Scripts/PlayerScript.cpp:200,(Player* player),notification; return ignored
+PLAYER_ON_CREATE,PLAYER,35,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:45,src/Scripts/PlayerScript.cpp:210,(Player* player),notification; return ignored
+PLAYER_ON_DELETE,PLAYER,36,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:46,src/Scripts/PlayerScript.cpp:215,"(ObjectGuid guid, uint32 accountId)",notification; return ignored
+PLAYER_ON_FAILED_DELETE,PLAYER,37,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:47,src/Scripts/PlayerScript.cpp:220,"(ObjectGuid guid, uint32 accountId)",notification; return ignored
+PLAYER_ON_SAVE,PLAYER,38,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:48,src/Scripts/PlayerScript.cpp:225,(Player* player),notification; return ignored
+PLAYER_ON_BIND_TO_INSTANCE,PLAYER,39,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:49,src/Scripts/PlayerScript.cpp:230,"(Player* player, Difficulty difficulty, uint32 mapId, bool permanent)",notification; return ignored
+PLAYER_ON_UPDATE_ZONE,PLAYER,40,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:50,src/Scripts/PlayerScript.cpp:235,"(Player* player, uint32 newZone, uint32 newArea)",notification; return ignored
+PLAYER_ON_UPDATE_AREA,PLAYER,41,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:51,src/Scripts/PlayerScript.cpp:240,"(Player* player, uint32 oldArea, uint32 newArea)",notification; return ignored
+PLAYER_ON_MAP_CHANGED,PLAYER,42,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:52,src/Scripts/PlayerScript.cpp:245,(Player* player),notification; return ignored
+PLAYER_ON_BEFORE_TELEPORT,PLAYER,43,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:53,src/Scripts/PlayerScript.cpp:250,"(Player* player, uint32 mapid, float x, float y, float z, float orientation, uint32 options, Unit* target)",permit; AND; default True
+PLAYER_ON_UPDATE_FACTION,PLAYER,44,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:54,src/Scripts/PlayerScript.cpp:255,(Player* player),notification; return ignored
+PLAYER_ON_ADD_TO_BATTLEGROUND,PLAYER,45,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:55,src/Scripts/PlayerScript.cpp:260,"(Player* player, Battleground* bg)",notification; return ignored
+PLAYER_ON_QUEUE_RANDOM_DUNGEON,PLAYER,46,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:56,src/Scripts/PlayerScript.cpp:265,"(Player* player, uint32 & rDungeonId)",notification; return ignored
+PLAYER_ON_REMOVE_FROM_BATTLEGROUND,PLAYER,47,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:57,src/Scripts/PlayerScript.cpp:270,"(Player* player, Battleground* bg)",notification; return ignored
+PLAYER_ON_ACHI_COMPLETE,PLAYER,48,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:58,src/Scripts/PlayerScript.cpp:275,"(Player* player, AchievementEntry const* achievement)",notification; return ignored
+PLAYER_ON_BEFORE_ACHI_COMPLETE,PLAYER,49,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:59,src/Scripts/PlayerScript.cpp:280,"(Player* player, AchievementEntry const* achievement)",permit; AND; default True
+PLAYER_ON_CRITERIA_PROGRESS,PLAYER,50,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:60,src/Scripts/PlayerScript.cpp:285,"(Player* player, AchievementCriteriaEntry const* criteria)",notification; return ignored
+PLAYER_ON_BEFORE_CRITERIA_PROGRESS,PLAYER,51,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:61,src/Scripts/PlayerScript.cpp:290,"(Player* player, AchievementCriteriaEntry const* criteria)",permit; AND; default True
+PLAYER_ON_ACHI_SAVE,PLAYER,52,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:62,src/Scripts/PlayerScript.cpp:295,"(CharacterDatabaseTransaction trans, Player* player, uint16 achId, CompletedAchievementData achiData)",notification; return ignored
+PLAYER_ON_CRITERIA_SAVE,PLAYER,53,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:63,src/Scripts/PlayerScript.cpp:300,"(CharacterDatabaseTransaction trans, Player* player, uint16 achId, CriteriaProgress criteriaData)",notification; return ignored
+PLAYER_ON_GOSSIP_SELECT,PLAYER,54,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:64,src/Scripts/PlayerScript.cpp:305,"(Player* player, uint32 menu_id, uint32 sender, uint32 action)",notification; return ignored
+PLAYER_ON_GOSSIP_SELECT_CODE,PLAYER,55,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:65,src/Scripts/PlayerScript.cpp:310,"(Player* player, uint32 menu_id, uint32 sender, uint32 action, char const* code)",notification; return ignored
+PLAYER_ON_BEING_CHARMED,PLAYER,56,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:66,src/Scripts/PlayerScript.cpp:315,"(Player* player, Unit* charmer, uint32 oldFactionId, uint32 newFactionId)",notification; return ignored
+PLAYER_ON_AFTER_SET_VISIBLE_ITEM_SLOT,PLAYER,57,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:67,src/Scripts/PlayerScript.cpp:320,"(Player* player, uint8 slot, Item* item)",notification; return ignored
+PLAYER_ON_AFTER_MOVE_ITEM_FROM_INVENTORY,PLAYER,58,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:68,src/Scripts/PlayerScript.cpp:325,"(Player* player, Item* it, uint8 bag, uint8 slot, bool update)",notification; return ignored
+PLAYER_ON_EQUIP,PLAYER,59,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:69,src/Scripts/PlayerScript.cpp:330,"(Player* player, Item* it, uint8 bag, uint8 slot, bool update)",notification; return ignored
+PLAYER_ON_PLAYER_JOIN_BG,PLAYER,60,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:70,src/Scripts/PlayerScript.cpp:335,(Player* player),notification; return ignored
+PLAYER_ON_PLAYER_JOIN_ARENA,PLAYER,61,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:71,src/Scripts/PlayerScript.cpp:340,(Player* player),notification; return ignored
+PLAYER_GET_CUSTOM_GET_ARENA_TEAM_ID,PLAYER,62,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:72,src/Scripts/PlayerScript.cpp:707,"(Player* player, uint8 slot, uint32& result)",notification; return ignored
+PLAYER_GET_CUSTOM_ARENA_PERSONAL_RATING,PLAYER,63,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:73,src/Scripts/PlayerScript.cpp:701,"(Player* player, uint8 slot, uint32& result)",notification; return ignored
+PLAYER_ON_GET_MAX_PERSONAL_ARENA_RATING_REQUIREMENT,PLAYER,64,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:74,src/Scripts/PlayerScript.cpp:345,"(Player const* player, uint32 minSlot, uint32& maxArenaRating)",notification; return ignored
+PLAYER_ON_LOOT_ITEM,PLAYER,65,yes,yes,available,borrowed-native-object;economy-path,src/Hooks/Defines/PlayerHook.h:75,src/Scripts/PlayerScript.cpp:350,"(Player* player, Item* item, uint32 count, ObjectGuid lootguid)",notification; return ignored
+PLAYER_ON_BEFORE_FILL_QUEST_LOOT_ITEM,PLAYER,66,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:76,src/Scripts/PlayerScript.cpp:355,"(Player* player, LootItem& item)",notification; return ignored
+PLAYER_ON_STORE_NEW_ITEM,PLAYER,67,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:77,src/Scripts/PlayerScript.cpp:360,"(Player* player, Item* item, uint32 count)",notification; return ignored
+PLAYER_ON_CREATE_ITEM,PLAYER,68,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:78,src/Scripts/PlayerScript.cpp:365,"(Player* player, Item* item, uint32 count)",notification; return ignored
+PLAYER_ON_QUEST_REWARD_ITEM,PLAYER,69,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:79,src/Scripts/PlayerScript.cpp:370,"(Player* player, Item* item, uint32 count)",notification; return ignored
+PLAYER_CAN_PLACE_AUCTION_BID,PLAYER,70,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:80,src/Scripts/PlayerScript.cpp:375,"(Player* player, AuctionEntry* auction)",permit; AND; default True
+PLAYER_ON_GROUP_ROLL_REWARD_ITEM,PLAYER,71,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:81,src/Scripts/PlayerScript.cpp:380,"(Player* player, Item* item, uint32 count, RollVote voteType, Roll* roll)",notification; return ignored
+PLAYER_ON_BEFORE_OPEN_ITEM,PLAYER,72,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:82,src/Scripts/PlayerScript.cpp:385,"(Player* player, Item* item)",permit; AND; default True
+PLAYER_ON_BEFORE_QUEST_COMPLETE,PLAYER,73,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:83,src/Scripts/PlayerScript.cpp:390,"(Player* player, uint32 quest_id)",permit; AND; default True
+PLAYER_ON_QUEST_COMPUTE_EXP,PLAYER,74,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:84,src/Scripts/PlayerScript.cpp:395,"(Player* player, Quest const* quest, uint32& xpValue)",notification; return ignored
+PLAYER_ON_BEFORE_DURABILITY_REPAIR,PLAYER,75,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:85,src/Scripts/PlayerScript.cpp:400,"(Player* player, ObjectGuid npcGUID, ObjectGuid itemGUID, float&discountMod, uint8 guildBank)",notification; return ignored
+PLAYER_ON_BEFORE_BUY_ITEM_FROM_VENDOR,PLAYER,76,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:86,src/Scripts/PlayerScript.cpp:405,"(Player* player, ObjectGuid vendorguid, uint32 vendorslot, uint32& item, uint8 count, uint8 bag, uint8 slot)",notification; return ignored
+PLAYER_ON_BEFORE_STORE_OR_EQUIP_NEW_ITEM,PLAYER,77,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:87,src/Scripts/PlayerScript.cpp:410,"(Player* player, uint32 vendorslot, uint32& item, uint8 count, uint8 bag, uint8 slot, ItemTemplate const* pProto, Creature* pVendor, VendorItem const* crItem, bool bStore)",notification; return ignored
+PLAYER_ON_AFTER_STORE_OR_EQUIP_NEW_ITEM,PLAYER,78,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:88,src/Scripts/PlayerScript.cpp:415,"(Player* player, uint32 vendorslot, Item* item, uint8 count, uint8 bag, uint8 slot, ItemTemplate const* pProto, Creature* pVendor, VendorItem const* crItem, bool bStore)",notification; return ignored
+PLAYER_ON_AFTER_UPDATE_MAX_POWER,PLAYER,79,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:89,src/Scripts/PlayerScript.cpp:420,"(Player* player, Powers& power, float& value)",notification; return ignored
+PLAYER_ON_AFTER_UPDATE_MAX_HEALTH,PLAYER,80,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:90,src/Scripts/PlayerScript.cpp:425,"(Player* player, float& value)",notification; return ignored
+PLAYER_ON_BEFORE_UPDATE_ATTACK_POWER_AND_DAMAGE,PLAYER,81,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:91,src/Scripts/PlayerScript.cpp:430,"(Player* player, float& level, float& val2, bool ranged)",notification; return ignored
+PLAYER_ON_AFTER_UPDATE_ATTACK_POWER_AND_DAMAGE,PLAYER,82,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:92,src/Scripts/PlayerScript.cpp:435,"(Player* player, float& level, float& base_attPower, float& attPowerMod, float& attPowerMultiplier, bool ranged)",notification; return ignored
+PLAYER_ON_BEFORE_INIT_TALENT_FOR_LEVEL,PLAYER,83,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:93,src/Scripts/PlayerScript.cpp:440,"(Player* player, uint8& level, uint32& talentPointsForLevel)",notification; return ignored
+PLAYER_ON_FIRST_LOGIN,PLAYER,84,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:94,src/Scripts/PlayerScript.cpp:445,(Player* player),notification; return ignored
+PLAYER_ON_SET_MAX_LEVEL,PLAYER,85,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:95,src/Scripts/PlayerScript.cpp:450,"(Player* player, uint32& maxPlayerLevel)",notification; return ignored
+PLAYER_CAN_JOIN_IN_BATTLEGROUND_QUEUE,PLAYER,86,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:96,src/Scripts/PlayerScript.cpp:455,"(Player* player, ObjectGuid BattlemasterGuid, BattlegroundTypeId BGTypeID, uint8 joinAsGroup, GroupJoinBattlegroundResult& err)",permit; AND; default True
+PLAYER_SHOULD_BE_REWARDED_WITH_MONEY_INSTEAD_OF_EXP,PLAYER,87,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:97,src/Scripts/PlayerScript.cpp:460,(Player* player),handled/override; OR; default False
+PLAYER_ON_BEFORE_TEMP_SUMMON_INIT_STATS,PLAYER,88,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:98,src/Scripts/PlayerScript.cpp:465,"(Player* player, TempSummon* tempSummon, uint32& duration)",notification; return ignored
+PLAYER_ON_BEFORE_GUARDIAN_INIT_STATS_FOR_LEVEL,PLAYER,89,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:99,src/Scripts/PlayerScript.cpp:470,"(Player* player, Guardian* guardian, CreatureTemplate const* cinfo, PetType& petType)",notification; return ignored
+PLAYER_ON_AFTER_GUARDIAN_INIT_STATS_FOR_LEVEL,PLAYER,90,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:100,src/Scripts/PlayerScript.cpp:475,"(Player* player, Guardian* guardian)",notification; return ignored
+PLAYER_ON_BEFORE_LOAD_PET_FROM_DB,PLAYER,91,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:101,src/Scripts/PlayerScript.cpp:480,"(Player* player, uint32& petentry, uint32& petnumber, bool& current, bool& forceLoadFromDB)",notification; return ignored
+PLAYER_CAN_JOIN_IN_ARENA_QUEUE,PLAYER,92,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:102,src/Scripts/PlayerScript.cpp:485,"(Player* player, ObjectGuid BattlemasterGuid, uint8 arenaslot, BattlegroundTypeId BGTypeID, uint8 joinAsGroup, uint8 IsRated, GroupJoinBattlegroundResult& err)",permit; AND; default True
+PLAYER_CAN_BATTLEFIELD_PORT,PLAYER,93,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:103,src/Scripts/PlayerScript.cpp:490,"(Player* player, uint8 arenaType, BattlegroundTypeId BGTypeID, uint8 action)",permit; AND; default True
+PLAYER_CAN_GROUP_INVITE,PLAYER,94,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:104,src/Scripts/PlayerScript.cpp:495,"(Player* player, std::string& membername)",permit; AND; default True
+PLAYER_CAN_GROUP_ACCEPT,PLAYER,95,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:105,src/Scripts/PlayerScript.cpp:500,"(Player* player, Group* group)",permit; AND; default True
+PLAYER_CAN_SELL_ITEM,PLAYER,96,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:106,src/Scripts/PlayerScript.cpp:505,"(Player* player, Item* item, Creature* creature)",permit; AND; default True
+PLAYER_CAN_SEND_MAIL,PLAYER,97,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:107,src/Scripts/PlayerScript.cpp:510,"(Player* player, ObjectGuid receiverGuid, ObjectGuid mailbox, std::string& subject, std::string& body, uint32 money, uint32 COD, Item* item)",permit; AND; default True
+PLAYER_PETITION_BUY,PLAYER,98,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:108,src/Scripts/PlayerScript.cpp:515,"(Player* player, Creature* creature, uint32& charterid, uint32& cost, uint32& type)",notification; return ignored
+PLAYER_PETITION_SHOW_LIST,PLAYER,99,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:109,src/Scripts/PlayerScript.cpp:520,"(Player* player, Creature* creature, uint32& CharterEntry, uint32& CharterDispayID, uint32& CharterCost)",notification; return ignored
+PLAYER_ON_REWARD_KILL_REWARDER,PLAYER,100,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:110,src/Scripts/PlayerScript.cpp:525,"(Player* player, KillRewarder* rewarder, bool isDungeon, float& rate)",notification; return ignored
+PLAYER_CAN_GIVE_MAIL_REWARD_AT_GIVE_LEVEL,PLAYER,101,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:111,src/Scripts/PlayerScript.cpp:530,"(Player* player, uint8 level)",permit; AND; default True
+PLAYER_ON_DELETE_FROM_DB,PLAYER,102,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:112,src/Scripts/PlayerScript.cpp:535,"(CharacterDatabaseTransaction trans, uint32 guid)",notification; return ignored
+PLAYER_CAN_REPOP_AT_GRAVEYARD,PLAYER,103,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:113,src/Scripts/PlayerScript.cpp:540,(Player* player),permit; AND; default True
+PLAYER_ON_PLAYER_IS_CLASS,PLAYER,104,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:114,src/Scripts/PlayerScript.cpp:545,"(Player const* player, Classes playerClass, ClassContext context)",optional decision; default None
+PLAYER_ON_GET_MAX_SKILL_VALUE,PLAYER,105,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:115,src/Scripts/PlayerScript.cpp:550,"(Player* player, uint32 skill, int32& result, bool IsPure)",notification; return ignored
+PLAYER_ON_PLAYER_HAS_ACTIVE_POWER_TYPE,PLAYER,106,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:116,src/Scripts/PlayerScript.cpp:555,"(Player const* player, Powers power)",handled/override; OR; default False
+PLAYER_ON_UPDATE_GATHERING_SKILL,PLAYER,107,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:117,src/Scripts/PlayerScript.cpp:560,"(Player* player, uint32 skill_id, uint32 current, uint32 gray, uint32 green, uint32 yellow, uint32& gain)",notification; return ignored
+PLAYER_ON_UPDATE_CRAFTING_SKILL,PLAYER,108,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:118,src/Scripts/PlayerScript.cpp:565,"(Player* player, SkillLineAbilityEntry const* skill, uint32 current_level, uint32& gain)",notification; return ignored
+PLAYER_ON_UPDATE_FISHING_SKILL,PLAYER,109,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:119,src/Scripts/PlayerScript.cpp:570,"(Player* player, int32 skill, int32 zone_skill, int32 chance, int32 roll)",permit; AND; default True
+PLAYER_CAN_AREA_EXPLORE_AND_OUTDOOR,PLAYER,110,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:120,src/Scripts/PlayerScript.cpp:575,(Player* player),permit; AND; default True
+PLAYER_ON_VICTIM_REWARD_BEFORE,PLAYER,111,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:121,src/Scripts/PlayerScript.cpp:580,"(Player* player, Player* victim, uint32& killer_title, int32& victim_rank)",notification; return ignored
+PLAYER_ON_VICTIM_REWARD_AFTER,PLAYER,112,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:122,src/Scripts/PlayerScript.cpp:585,"(Player* player, Player* victim, uint32& killer_title, int32& victim_rank, float& honor_f)",notification; return ignored
+PLAYER_ON_CUSTOM_SCALING_STAT_VALUE_BEFORE,PLAYER,113,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:123,src/Scripts/PlayerScript.cpp:590,"(Player* player, ItemTemplate const* proto, uint8 slot, bool apply, uint32& CustomScalingStatValue)",notification; return ignored
+PLAYER_ON_CUSTOM_SCALING_STAT_VALUE,PLAYER,114,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:124,src/Scripts/PlayerScript.cpp:595,"(Player* player, ItemTemplate const* proto, uint32& statType, int32& val, uint8 itemProtoStatNumber, uint32 ScalingStatValue, ScalingStatValuesEntry const* ssv)",notification; return ignored
+PLAYER_ON_APPLY_ITEM_MODS_BEFORE,PLAYER,115,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:125,src/Scripts/PlayerScript.cpp:600,"(Player* player, uint8 slot, bool apply, uint8 itemProtoStatNumber, uint32 statType, int32& val)",notification; return ignored
+PLAYER_ON_APPLY_ENCHANTMENT_ITEM_MODS_BEFORE,PLAYER,116,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:126,src/Scripts/PlayerScript.cpp:605,"(Player* player, Item* item, EnchantmentSlot slot, bool apply, uint32 enchant_spell_id, uint32& enchant_amount)",notification; return ignored
+PLAYER_ON_APPLY_WEAPON_DAMAGE,PLAYER,117,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:127,src/Scripts/PlayerScript.cpp:610,"(Player* player, uint8 slot, ItemTemplate const* proto, float& minDamage, float& maxDamage, uint8 damageIndex)",notification; return ignored
+PLAYER_CAN_ARMOR_DAMAGE_MODIFIER,PLAYER,118,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:128,src/Scripts/PlayerScript.cpp:615,(Player* player),permit; AND; default True
+PLAYER_ON_GET_FERAL_AP_BONUS,PLAYER,119,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:129,src/Scripts/PlayerScript.cpp:620,"(Player* player, int32& feral_bonus, int32 dpsMod, ItemTemplate const* proto, ScalingStatValuesEntry const* ssv)",notification; return ignored
+PLAYER_CAN_APPLY_WEAPON_DEPENDENT_AURA_DAMAGE_MOD,PLAYER,120,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:130,src/Scripts/PlayerScript.cpp:625,"(Player* player, Item* item, WeaponAttackType attackType, AuraEffect const* aura, bool apply)",permit; AND; default True
+PLAYER_CAN_APPLY_EQUIP_SPELL,PLAYER,121,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:131,src/Scripts/PlayerScript.cpp:630,"(Player* player, SpellInfo const* spellInfo, Item* item, bool apply, bool form_change)",permit; AND; default True
+PLAYER_CAN_APPLY_EQUIP_SPELLS_ITEM_SET,PLAYER,122,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:132,src/Scripts/PlayerScript.cpp:635,"(Player* player, ItemSetEffect* eff)",permit; AND; default True
+PLAYER_CAN_CAST_ITEM_COMBAT_SPELL,PLAYER,123,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:133,src/Scripts/PlayerScript.cpp:640,"(Player* player, Unit* target, WeaponAttackType attType, uint32 procVictim, uint32 procEx, Item* item, ItemTemplate const* proto)",permit; AND; default True
+PLAYER_CAN_CAST_ITEM_USE_SPELL,PLAYER,124,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:134,src/Scripts/PlayerScript.cpp:645,"(Player* player, Item* item, SpellCastTargets const& targets, uint8 cast_count, uint32 glyphIndex)",permit; AND; default True
+PLAYER_ON_APPLY_AMMO_BONUSES,PLAYER,125,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:135,src/Scripts/PlayerScript.cpp:650,"(Player* player, ItemTemplate const* proto, float& currentAmmoDPS)",notification; return ignored
+PLAYER_CAN_EQUIP_ITEM,PLAYER,126,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:136,src/Scripts/PlayerScript.cpp:655,"(Player* player, uint8 slot, uint16& dest, Item* pItem, bool swap, bool not_loading)",permit; AND; default True
+PLAYER_CAN_UNEQUIP_ITEM,PLAYER,127,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:137,src/Scripts/PlayerScript.cpp:660,"(Player* player, uint16 pos, bool swap)",permit; AND; default True
+PLAYER_CAN_USE_ITEM,PLAYER,128,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:138,src/Scripts/PlayerScript.cpp:665,"(Player* player, ItemTemplate const* proto, InventoryResult& result)",permit; AND; default True
+PLAYER_CAN_SAVE_EQUIP_NEW_ITEM,PLAYER,129,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:139,src/Scripts/PlayerScript.cpp:670,"(Player* player, Item* item, uint16 pos, bool update)",permit; AND; default True
+PLAYER_CAN_APPLY_ENCHANTMENT,PLAYER,130,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:140,src/Scripts/PlayerScript.cpp:675,"(Player* player, Item* item, EnchantmentSlot slot, bool apply, bool apply_dur, bool ignore_condition)",permit; AND; default True
+PLAYER_PASSED_QUEST_KILLED_MONSTER_CREDIT,PLAYER,131,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:141,src/Scripts/PlayerScript.cpp:680,"(Player* player, Quest const* qinfo, uint32 entry, uint32 real_entry, ObjectGuid guid)",permit; AND; default True
+PLAYER_CHECK_ITEM_IN_SLOT_AT_LOAD_INVENTORY,PLAYER,132,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:142,src/Scripts/PlayerScript.cpp:685,"(Player* player, Item* item, uint8 slot, uint8& err, uint16& dest)",permit; AND; default True
+PLAYER_NOT_AVOID_SATISFY,PLAYER,133,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:143,src/Scripts/PlayerScript.cpp:690,"(Player* player, DungeonProgressionRequirements const* ar, uint32 target_map, bool report)",permit; AND; default True
+PLAYER_NOT_VISIBLE_GLOBALLY_FOR,PLAYER,134,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:144,src/Scripts/PlayerScript.cpp:695,"(Player* player, Player const* u)",permit; AND; default True
+PLAYER_ON_GET_ARENA_PERSONAL_RATING,PLAYER,135,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:145,src/Scripts/PlayerScript.cpp:700,"(Player* player, uint8 slot, uint32& result)",notification; return ignored
+PLAYER_ON_GET_ARENA_TEAM_ID,PLAYER,136,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:146,src/Scripts/PlayerScript.cpp:706,"(Player* player, uint8 slot, uint32& result)",notification; return ignored
+PLAYER_ON_IS_FFA_PVP,PLAYER,137,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:147,src/Scripts/PlayerScript.cpp:712,"(Player* player, bool& result)",notification; return ignored
+PLAYER_ON_FFA_PVP_STATE_UPDATE,PLAYER,138,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:148,src/Scripts/PlayerScript.cpp:717,"(Player* player, bool result)",notification; return ignored
+PLAYER_ON_IS_PVP,PLAYER,139,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:149,src/Scripts/PlayerScript.cpp:722,"(Player* player, bool& result)",notification; return ignored
+PLAYER_ON_GET_MAX_SKILL_VALUE_FOR_LEVEL,PLAYER,140,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:150,src/Scripts/PlayerScript.cpp:727,"(Player* player, uint16& result)",notification; return ignored
+PLAYER_NOT_SET_ARENA_TEAM_INFO_FIELD,PLAYER,141,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:151,src/Scripts/PlayerScript.cpp:732,"(Player* player, uint8 slot, ArenaTeamInfoType type, uint32 value)",permit; AND; default True
+PLAYER_CAN_JOIN_LFG,PLAYER,142,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:152,src/Scripts/PlayerScript.cpp:737,"(Player* player, uint8 roles, std::set<uint32>& dungeons, std::string const& comment)",permit; AND; default True
+PLAYER_CAN_ENTER_MAP,PLAYER,143,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:153,src/Scripts/PlayerScript.cpp:742,"(Player* player, MapEntry const* entry, InstanceTemplate const* instance, MapDifficulty const* mapDiff, bool loginCheck)",permit; AND; default True
+PLAYER_CAN_INIT_TRADE,PLAYER,144,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:154,src/Scripts/PlayerScript.cpp:747,"(Player* player, Player* target)",permit; AND; default True
+PLAYER_CAN_SET_TRADE_ITEM,PLAYER,145,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:155,src/Scripts/PlayerScript.cpp:752,"(Player* player, Item* tradedItem, uint8 tradeSlot)",permit; AND; default True
+PLAYER_ON_SET_SERVER_SIDE_VISIBILITY,PLAYER,146,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:156,src/Scripts/PlayerScript.cpp:757,"(Player* player, ServerSideVisibilityType& type, AccountTypes& sec)",notification; return ignored
+PLAYER_ON_SET_SERVER_SIDE_VISIBILITY_DETECT,PLAYER,147,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:157,src/Scripts/PlayerScript.cpp:762,"(Player* player, ServerSideVisibilityType& type, AccountTypes& sec)",notification; return ignored
+PLAYER_ON_PLAYER_RESURRECT,PLAYER,148,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:158,src/Scripts/PlayerScript.cpp:767,"(Player* player, float restore_percent, bool& applySickness)",notification; return ignored
+PLAYER_ON_BEFORE_CHOOSE_GRAVEYARD,PLAYER,149,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:159,src/Scripts/PlayerScript.cpp:772,"(Player* player, TeamId teamId, bool nearCorpse, uint32& graveyardOverride)",notification; return ignored
+PLAYER_CAN_PLAYER_USE_CHAT,PLAYER,150,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:160,src/Scripts/PlayerScript.cpp:777,"(Player* player, uint32 type, uint32 language, std::string& msg)",permit; AND; default True
+PLAYER_CAN_PLAYER_USE_PRIVATE_CHAT,PLAYER,151,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:161,src/Scripts/PlayerScript.cpp:782,"(Player* player, uint32 type, uint32 language, std::string& msg, Player* receiver)",permit; AND; default True
+PLAYER_CAN_PLAYER_USE_GROUP_CHAT,PLAYER,152,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:162,src/Scripts/PlayerScript.cpp:787,"(Player* player, uint32 type, uint32 language, std::string& msg, Group* group)",permit; AND; default True
+PLAYER_CAN_PLAYER_USE_GUILD_CHAT,PLAYER,153,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:163,src/Scripts/PlayerScript.cpp:792,"(Player* player, uint32 type, uint32 language, std::string& msg, Guild* guild)",permit; AND; default True
+PLAYER_CAN_PLAYER_USE_CHANNEL_CHAT,PLAYER,154,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:164,src/Scripts/PlayerScript.cpp:797,"(Player* player, uint32 type, uint32 language, std::string& msg, Channel* channel)",permit; AND; default True
+PLAYER_ON_PLAYER_LEARN_TALENTS,PLAYER,155,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:165,src/Scripts/PlayerScript.cpp:802,"(Player* player, uint32 talentId, uint32 talentRank, uint32 spellid)",notification; return ignored
+PLAYER_ON_PLAYER_ENTER_COMBAT,PLAYER,156,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:166,src/Scripts/PlayerScript.cpp:807,"(Player* player, Unit* enemy)",notification; return ignored
+PLAYER_ON_PLAYER_LEAVE_COMBAT,PLAYER,157,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:167,src/Scripts/PlayerScript.cpp:812,(Player* player),notification; return ignored
+PLAYER_ON_QUEST_ABANDON,PLAYER,158,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:168,src/Scripts/PlayerScript.cpp:817,"(Player* player, uint32 questId)",notification; return ignored
+PLAYER_ON_GET_QUEST_RATE,PLAYER,159,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:169,src/Scripts/PlayerScript.cpp:822,"(Player* player, float& result)",notification; return ignored
+PLAYER_ON_CAN_PLAYER_FLY_IN_ZONE,PLAYER,160,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:170,src/Scripts/PlayerScript.cpp:827,"(Player* player, uint32 mapId, uint32 zoneId, SpellInfo const* bySpell)",permit; AND; default True
+PLAYER_ANTICHEAT_SET_CAN_FLY_BY_SERVER,PLAYER,161,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:171,src/Scripts/PlayerScript.cpp:832,"(Player* player, bool apply)",notification; return ignored
+PLAYER_ANTICHEAT_SET_UNDER_ACK_MOUNT,PLAYER,162,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:172,src/Scripts/PlayerScript.cpp:837,(Player* player),notification; return ignored
+PLAYER_ANTICHEAT_SET_ROOT_ACK_UPD,PLAYER,163,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:173,src/Scripts/PlayerScript.cpp:842,(Player* player),notification; return ignored
+PLAYER_ANTICHEAT_SET_JUMPING_BY_OPCODE,PLAYER,164,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:174,src/Scripts/PlayerScript.cpp:847,"(Player* player, bool jump)",notification; return ignored
+PLAYER_ANTICHEAT_UPDATE_MOVEMENT_INFO,PLAYER,165,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:175,src/Scripts/PlayerScript.cpp:852,"(Player* player, MovementInfo const& movementInfo)",notification; return ignored
+PLAYER_ANTICHEAT_HANDLE_DOUBLE_JUMP,PLAYER,166,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:176,src/Scripts/PlayerScript.cpp:857,"(Player* player, Unit* mover)",permit; AND; default True
+PLAYER_ANTICHEAT_CHECK_MOVEMENT_INFO,PLAYER,167,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:177,src/Scripts/PlayerScript.cpp:862,"(Player* player, MovementInfo const& movementInfo, Unit* mover, bool jump)",permit; AND; default True
+PLAYER_CAN_SEND_ERROR_ALREADY_LOOTED,PLAYER,168,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:178,src/Scripts/PlayerScript.cpp:867,(Player* player),permit; AND; default True
+PLAYER_ON_AFTER_CREATURE_LOOT,PLAYER,169,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:179,src/Scripts/PlayerScript.cpp:872,(Player* player),notification; return ignored
+PLAYER_ON_AFTER_CREATURE_LOOT_MONEY,PLAYER,170,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:180,src/Scripts/PlayerScript.cpp:877,(Player* player),notification; return ignored
+PLAYER_ON_CAN_UPDATE_SKILL,PLAYER,171,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:181,src/Scripts/PlayerScript.cpp:882,"(Player* player, uint32 skillId)",permit; AND; default True
+PLAYER_ON_BEFORE_UPDATE_SKILL,PLAYER,172,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:182,src/Scripts/PlayerScript.cpp:887,"(Player* player, uint32 skillId, uint32& value, uint32 max, uint32 step)",notification; return ignored
+PLAYER_ON_UPDATE_SKILL,PLAYER,173,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:183,src/Scripts/PlayerScript.cpp:892,"(Player* player, uint32 skillId, uint32 value, uint32 max, uint32 step, uint32 newValue)",notification; return ignored
+PLAYER_CAN_RESURRECT,PLAYER,174,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:184,src/Scripts/PlayerScript.cpp:897,(Player* player),permit; AND; default True
+PLAYER_ON_CAN_GIVE_LEVEL,PLAYER,175,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:185,src/Scripts/PlayerScript.cpp:902,"(Player* player, uint8 newLevel)",permit; AND; default True
+PLAYER_ON_SEND_LIST_INVENTORY,PLAYER,176,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:186,src/Scripts/PlayerScript.cpp:907,"(Player* player, ObjectGuid vendorGuid, uint32& vendorEntry)",notification; return ignored
+PLAYER_ON_GIVE_REPUTATION,PLAYER,177,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:187,src/Scripts/PlayerScript.cpp:912,"(Player* player, int32 factionID, float& amount, ReputationSource repSource)",notification; return ignored
+PLAYER_CAN_LEARN_TALENT,PLAYER,178,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:188,src/Scripts/PlayerScript.cpp:917,"(Player* player, TalentEntry const* talent, uint32 rank)",permit; AND; default True
+PLAYER_ON_BEFORE_SEND_LOOT,PLAYER,179,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:189,src/Scripts/PlayerScript.cpp:922,"(Player* player, ObjectGuid lootGuid, Loot* loot)",notification; return ignored
+PLAYER_CAN_PROGRESS,PLAYER,180,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:190,src/Scripts/PlayerScript.cpp:927,(Player* player),permit; AND; default True
+PLAYER_CAN_LEARN_PROGRESSION_SPELL,PLAYER,181,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:191,src/Scripts/PlayerScript.cpp:932,"(Player* player, uint32 spellID)",permit; AND; default True
+PLAYER_ON_AFTER_UPDATE,PLAYER,182,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:192,src/Scripts/PlayerScript.cpp:937,"(Player* player, uint32 p_time)",notification; return ignored
+PLAYER_CAN_LOAD_FROM_DB,PLAYER,183,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:193,src/Scripts/PlayerScript.cpp:942,"(ObjectGuid guid, std::string const& name, uint8 race, uint8 classId, uint8 level, uint32 mapId, float x, float y, float z, AccountTypes security, bool isBot)",permit; AND; default True
+PLAYER_ON_UNEQUIP_ITEM,PLAYER,184,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:194,src/Scripts/PlayerScript.cpp:947,"(Player* player, Item* it)",notification; return ignored
+PLAYER_CAN_STORE_PROGRESSION_ITEM,PLAYER,185,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:195,src/Scripts/PlayerScript.cpp:952,"(Player* player, ItemTemplate const* item)",permit; AND; default True
+PLAYER_CAN_CREATE_PROGRESSION_AUCTION,PLAYER,186,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:196,src/Scripts/PlayerScript.cpp:957,"(Player* player, Item* item)",permit; AND; default True
+PLAYER_ON_PLAYER_QUEST_ACCEPT,PLAYER,187,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:197,src/Scripts/PlayerScript.cpp:962,"(Player* player, Quest const* quest)",notification; return ignored
+PLAYER_CAN_ACCEPT_QUEST,PLAYER,188,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:198,src/Scripts/PlayerScript.cpp:967,"(Player* player, Quest const* quest)",permit; AND; default True
+PLAYER_CAN_PROGRESS_QUEST_OBJECTIVE,PLAYER,189,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:199,src/Scripts/PlayerScript.cpp:972,"(Player* player, Quest const* quest)",permit; AND; default True
+PLAYER_CAN_REWARD_QUEST,PLAYER,190,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:200,src/Scripts/PlayerScript.cpp:977,"(Player* player, Quest const* quest)",permit; AND; default True
+PLAYER_CAN_SET_PROGRESSION_SKILL,PLAYER,191,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:201,src/Scripts/PlayerScript.cpp:982,"(Player* player, uint32 skillId, uint32 value, uint32 max, uint32 step)",permit; AND; default True
+PLAYER_ON_SET_SKILL,PLAYER,192,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:202,src/Scripts/PlayerScript.cpp:987,"(Player* player, uint32 skillId, uint32 value, uint32 max, uint32 step, uint32 newValue)",notification; return ignored
+PLAYER_ON_GET_REPUTATION_PRICE_DISCOUNT,PLAYER,193,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:203,src/Scripts/PlayerScript.cpp:992;src/Scripts/PlayerScript.cpp:997,"(Player const* player, Creature const* creature, float& discount);(Player const* player, FactionTemplateEntry const* factionTemplate, float& discount)",notification; return ignored
+PLAYER_ON_LEARN_TAXI_NODE,PLAYER,194,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:204,src/Scripts/PlayerScript.cpp:1002,"(Player const* player, uint32 nodeId)",notification; return ignored
+PLAYER_ON_BEFORE_GET_LEVEL_FOR_XP_GAIN,PLAYER,195,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:205,src/Scripts/PlayerScript.cpp:1007,"(Player const* player, uint8& level)",notification; return ignored
+PLAYER_GET_PROGRESSION_LEVEL_CEILING,PLAYER,196,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:206,src/Scripts/PlayerScript.cpp:1012,"(Player* player, uint8& ceiling)",notification; return ignored
+PLAYER_GET_PROGRESSION_SKILL_CEILING,PLAYER,197,yes,yes,available,borrowed-native-object,src/Hooks/Defines/PlayerHook.h:207,src/Scripts/PlayerScript.cpp:1017,"(Player* player, uint32 skillId, uint32& ceiling)",notification; return ignored
+SERVER_ON_NETWORK_START,SERVER,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:10,src/Scripts/ServerScript.cpp:29,(),notification; return ignored
+SERVER_ON_NETWORK_STOP,SERVER,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:11,src/Scripts/ServerScript.cpp:34,(),notification; return ignored
+SERVER_ON_SOCKET_OPEN,SERVER,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:12,src/Scripts/ServerScript.cpp:39,(std::shared_ptr<WorldSocket> const& socket),notification; return ignored
+SERVER_ON_SOCKET_CLOSE,SERVER,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:13,src/Scripts/ServerScript.cpp:44,(std::shared_ptr<WorldSocket> const& socket),notification; return ignored
+SERVER_CAN_PACKET_SEND,SERVER,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:14,src/Scripts/ServerScript.cpp:49,"(WorldSession* session, WorldPacket const& packet)",permit; AND; default True
+SERVER_CAN_PACKET_RECEIVE,SERVER,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:15,src/Scripts/ServerScript.cpp:54;src/Scripts/ServerScript.cpp:59,"(WorldSession* session, WorldPacket const& packet);(WorldSession* session, WorldPacket& packet)",permit; AND; default True
+SERVER_ON_PACKET_RECEIVED,SERVER,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/ServerHook.h:16,src/Scripts/ServerScript.cpp:63,"(WorldSession* session, WorldPacket const& packet)",notification; return ignored
+UNIT_ON_HEAL,UNIT,0,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:10,src/Scripts/UnitScript.cpp:29,"(Unit* healer, Unit* reciever, uint32& gain)",notification; return ignored
+UNIT_ON_DAMAGE,UNIT,1,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:11,src/Scripts/UnitScript.cpp:34,"(Unit* attacker, Unit* victim, uint32& damage)",notification; return ignored
+UNIT_MODIFY_PERIODIC_DAMAGE_AURAS_TICK,UNIT,2,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:12,src/Scripts/UnitScript.cpp:39,"(Unit* target, Unit* attacker, uint32& damage, SpellInfo const* spellInfo)",notification; return ignored
+UNIT_MODIFY_MELEE_DAMAGE,UNIT,3,yes,yes,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:13,src/Scripts/UnitScript.cpp:44,"(Unit* target, Unit* attacker, uint32& damage)",notification; return ignored
+UNIT_MODIFY_SPELL_DAMAGE_TAKEN,UNIT,4,yes,yes,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:14,src/Scripts/UnitScript.cpp:49,"(Unit* target, Unit* attacker, int32& damage, SpellInfo const* spellInfo)",notification; return ignored
+UNIT_MODIFY_HEAL_RECEIVED,UNIT,5,yes,yes,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:15,src/Scripts/UnitScript.cpp:54,"(Unit* target, Unit* healer, uint32& heal, SpellInfo const* spellInfo)",notification; return ignored
+UNIT_ON_BEFORE_ROLL_MELEE_OUTCOME_AGAINST,UNIT,6,yes,yes,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:16,src/Scripts/UnitScript.cpp:59,"(Unit const* attacker, Unit const* victim, WeaponAttackType attType, int32& attackerMaxSkillValueForLevel, int32& victimMaxSkillValueForLevel, int32& attackerWeaponSkill, int32& victimDefenseSkill, int32& crit_chance, int32& miss_chance, int32& dodge_chance, int32& parry_chance, int32& block_chance )",notification; return ignored
+UNIT_ON_AURA_APPLY,UNIT,7,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:17,src/Scripts/UnitScript.cpp:64,"(Unit* unit, Aura* aura)",notification; return ignored
+UNIT_ON_AURA_REMOVE,UNIT,8,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:18,src/Scripts/UnitScript.cpp:69,"(Unit* unit, AuraApplication* aurApp, AuraRemoveMode mode)",notification; return ignored
+UNIT_IF_NORMAL_REACTION,UNIT,9,yes,yes,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:19,src/Scripts/UnitScript.cpp:74,"(Unit const* unit, Unit const* target, ReputationRank& repRank)",permit; AND; default True
+UNIT_CAN_SET_PHASE_MASK,UNIT,10,yes,yes,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:20,src/Scripts/UnitScript.cpp:79,"(Unit const* unit, uint32 newPhaseMask, bool update)",permit; AND; default True
+UNIT_IS_CUSTOM_BUILD_VALUES_UPDATE,UNIT,11,yes,yes,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:21,src/Scripts/UnitScript.cpp:84,"(Unit const* unit, uint8 updateType, ByteBuffer& fieldBuffer, Player const* target, uint16 index)",handled/override; OR; default False
+UNIT_SHOULD_TRACK_VALUES_UPDATE_POS_BY_INDEX,UNIT,12,yes,yes,available,authoritative-boolean;borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:22,src/Scripts/UnitScript.cpp:89,"(Unit const* unit, uint8 updateType, uint16 index)",handled/override; OR; default False
+UNIT_ON_PATCH_VALUES_UPDATE,UNIT,13,yes,yes,available,borrowed-native-object;combat-or-hot-path;mutable-authority,src/Hooks/Defines/UnitHook.h:23,src/Scripts/UnitScript.cpp:94,"(Unit const* unit, ByteBuffer& valuesUpdateBuf, BuildValuesCachePosPointers& posPointers, Player* target)",notification; return ignored
+UNIT_ON_UNIT_UPDATE,UNIT,14,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:24,src/Scripts/UnitScript.cpp:99,"(Unit* unit, uint32 diff)",notification; return ignored
+UNIT_ON_DISPLAYID_CHANGE,UNIT,15,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:25,src/Scripts/UnitScript.cpp:104,"(Unit* unit, uint32 displayId)",notification; return ignored
+UNIT_ON_UNIT_ENTER_EVADE_MODE,UNIT,16,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:26,src/Scripts/UnitScript.cpp:109,"(Unit* unit, uint8 evadeReason)",notification; return ignored
+UNIT_ON_UNIT_ENTER_COMBAT,UNIT,17,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:27,src/Scripts/UnitScript.cpp:114,"(Unit* unit, Unit* victim)",notification; return ignored
+UNIT_ON_UNIT_DEATH,UNIT,18,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:28,src/Scripts/UnitScript.cpp:119,"(Unit* unit, Unit* killer)",notification; return ignored
+UNIT_ON_UNIT_SET_SHAPESHIFT_FORM,UNIT,19,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:29,src/Scripts/UnitScript.cpp:124,"(Unit* unit, uint8 form)",notification; return ignored
+UNIT_ON_UNIT_EXIT_COMBAT,UNIT,20,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:30,src/Scripts/UnitScript.cpp:129,(Unit* unit),notification; return ignored
+UNIT_DEAL_DAMAGE,UNIT,21,yes,yes,available,borrowed-native-object;combat-or-hot-path,src/Hooks/Defines/UnitHook.h:31,src/Scripts/UnitScript.cpp:133,"(Unit* attacker, Unit* victim, uint32 damage, DamageEffectType damageType)",last valid return; default damage
+WORLD_ON_OPEN_STATE_CHANGE,WORLD,0,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:10,src/Scripts/WorldScript.cpp:29,(bool open),notification; return ignored
+WORLD_ON_AFTER_CONFIG_LOAD,WORLD,1,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:11,src/Scripts/WorldScript.cpp:34,(bool reload),notification; return ignored
+WORLD_ON_LOAD_CUSTOM_DATABASE_TABLE,WORLD,2,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:12,src/Scripts/WorldScript.cpp:39,(),notification; return ignored
+WORLD_ON_BEFORE_CONFIG_LOAD,WORLD,3,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:13,src/Scripts/WorldScript.cpp:44,(bool reload),notification; return ignored
+WORLD_ON_MOTD_CHANGE,WORLD,4,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:14,src/Scripts/WorldScript.cpp:49,"(std::string& newMotd, LocaleConstant& locale)",notification; return ignored
+WORLD_ON_SHUTDOWN_INITIATE,WORLD,5,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:15,src/Scripts/WorldScript.cpp:54,"(ShutdownExitCode code, ShutdownMask mask)",notification; return ignored
+WORLD_ON_SHUTDOWN_CANCEL,WORLD,6,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:16,src/Scripts/WorldScript.cpp:59,(),notification; return ignored
+WORLD_ON_UPDATE,WORLD,7,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:17,src/Scripts/WorldScript.cpp:64,(uint32 diff),notification; return ignored
+WORLD_ON_STARTUP,WORLD,8,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:18,src/Scripts/WorldScript.cpp:69,(),notification; return ignored
+WORLD_ON_SHUTDOWN,WORLD,9,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:19,src/Scripts/WorldScript.cpp:74,(),notification; return ignored
+WORLD_ON_AFTER_UNLOAD_ALL_MAPS,WORLD,10,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:20,src/Scripts/WorldScript.cpp:79,(),notification; return ignored
+WORLD_ON_BEFORE_FINALIZE_PLAYER_WORLD_SESSION,WORLD,11,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:21,src/Scripts/WorldScript.cpp:85,(uint32& cacheVersion),notification; return ignored
+WORLD_ON_BEFORE_WORLD_INITIALIZED,WORLD,12,yes,yes,available,borrowed-native-object,src/Hooks/Defines/WorldHook.h:22,src/Scripts/WorldScript.cpp:90,(),notification; return ignored

@@ -1,151 +1,82 @@
 #include "HookMacros.h"
+#include "PythonBorrowed.h"
 #include "ScriptMgr.h"
-#include "Creature.h"
 #include "Player.h"
+#include "Creature.h"
+#include "GameObject.h"
+#include "Spell.h"
+#include "Item.h"
+#include "ArenaTeam.h"
+#include "Battleground.h"
+#include "AchievementMgr.h"
+#include "WorldSession.h"
+#include "WorldSocket.h"
+#include "Map.h"
+#include "Guild.h"
+#include "Group.h"
+#include "Channel.h"
+#include "Pet.h"
+#include "ObjectMgr.h"
+#include "LootMgr.h"
+#include "SpellAuraEffects.h"
 
-class PythonCreatureScript : public CreatureScript
+class PythonCreatureScript : public AllCreatureScript
 {
 public:
-    PythonCreatureScript() : CreatureScript("PythonCreatureScript") {}
+    PythonCreatureScript() : AllCreatureScript("PythonCreatureScript") {}
 
-    /**
-     * @brief Disable database binding requirement and suppress errors like:
-     * Script named '<PythonEntityScript>' is not assigned in the database.
-     *
-     * @todo should use AllCreatureScript instead?
-     */
-    bool IsDatabaseBound() const override { return false; }
-
-    /**
-     * @brief Called when a player opens a gossip dialog with the creature
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnGossipHello(Player* player, Creature* creature) override
+    bool CanCreatureGossipHello(Player* player, Creature* creature) override
     {
-        TRIGGER_CREATURE_HOOK(ON_GOSSIP_HELLO, creature->GetEntry(), player, creature);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_GOSSIP_HELLO, creature->GetEntry(), false, player, creature);
     }
 
-    /**
-     * @brief Called when a player selects a gossip item in the creature's gossip menu
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param sender Contains information about the sender type
-     * @param action Contains information about the action id
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action) override
+    bool CanCreatureGossipSelect(Player* player, Creature* creature, uint32 sender, uint32 action) override
     {
-        TRIGGER_CREATURE_HOOK(ON_GOSSIP_SELECT, creature->GetEntry(), player, creature, sender, action);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_GOSSIP_SELECT, creature->GetEntry(), false, player, creature, sender, action);
     }
 
-    /**
-     * @brief Called when a player selects a gossip with a code in the creature's gossip menu
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param sender Contains information about the sender type
-     * @param action Contains information about the action id
-     * @param code Contains information about the code entered
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnGossipSelectCode(Player* player, Creature* creature, uint32 sender, uint32 action, char const* code) override
+    bool CanCreatureGossipSelectCode(Player* player, Creature* creature, uint32 sender, uint32 action, char const* code) override
     {
-        TRIGGER_CREATURE_HOOK(ON_GOSSIP_SELECT_CODE, creature->GetEntry(), player, creature, sender, action, code);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_GOSSIP_SELECT_CODE, creature->GetEntry(), false, player, creature, sender, action, code);
     }
 
-    /**
-     * @brief Called when a player accepts a quest from the creature
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param quest Contains information about the Quest
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnQuestAccept(Player* player, Creature* creature, Quest const* quest) override
+    bool CanCreatureQuestAccept(Player* player, Creature* creature, Quest const* quest) override
     {
-        TRIGGER_CREATURE_HOOK(ON_QUEST_ACCEPT, creature->GetEntry(), player, creature, quest);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_QUEST_ACCEPT, creature->GetEntry(), false, player, creature, quest);
     }
 
-    /**
-     * @brief Called when a player selects a quest in the creature's quest menu
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param quest Contains information about the Quest
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnQuestSelect(Player* player, Creature* creature, Quest const* quest) override
+    bool OnCreatureQuestSelect(Player* player, Creature* creature, Quest const* quest) override
     {
-        TRIGGER_CREATURE_HOOK(ON_QUEST_SELECT, creature->GetEntry(), player, creature, quest);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_QUEST_SELECT, creature->GetEntry(), false, player, creature, quest);
     }
 
-    /**
-     * @brief Called when a player completes a quest with the creature
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param quest Contains information about the Quest
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnQuestComplete(Player* player, Creature* creature, Quest const* quest) override
+    bool OnCreatureQuestComplete(Player* player, Creature* creature, Quest const* quest) override
     {
-        TRIGGER_CREATURE_HOOK(ON_QUEST_COMPLETE, creature->GetEntry(), player, creature, quest);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_QUEST_COMPLETE, creature->GetEntry(), false, player, creature, quest);
     }
 
-    /**
-     * @brief Called when a player selects a quest reward
-     *
-     * @param player Contains information about the Player
-     * @param creature Contains information about the Creature
-     * @param quest Contains information about the Quest
-     * @param opt Contains information about the quest's reward id
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt) override
+    bool OnCreatureQuestReward(Player* player, Creature* creature, Quest const* quest, uint32 opt) override
     {
-        TRIGGER_CREATURE_HOOK(ON_QUEST_REWARD, creature->GetEntry(), player, creature, quest, opt);
-        return false;
+        return TRIGGER_CREATURE_HOOK_RESULT(ON_QUEST_REWARD, creature->GetEntry(), false, player, creature, quest, opt);
     }
-};
 
-class PythonAllCreatureScript : public AllCreatureScript
-{
-public:
-    PythonAllCreatureScript() : AllCreatureScript("PythonAllCreatureScript") {}
-
-    /**
-     * @brief This hook runs after adding a creature to the world
-     *
-     * @param creature Contains information about the Creature
-     */
     void OnCreatureAddWorld(Creature* creature) override
     {
         TRIGGER_CREATURE_HOOK(ON_ADD_WORLD, creature->GetEntry(), creature);
     }
 
-    /**
-     * @brief This hook runs after removing a creature from the world
-     *
-     * @param creature Contains information about the Creature
-     */
     void OnCreatureRemoveWorld(Creature* creature) override
     {
         TRIGGER_CREATURE_HOOK(ON_REMOVE_WORLD, creature->GetEntry(), creature);
+        if (Py_IsInitialized())
+        {
+            PyEng::Bridge::GILGuard gil;
+            PyEng::Bridge::InvalidateBorrowedPointer(creature);
+        }
     }
 };
 
 void AddSC_PythonCreatureScripts()
 {
     new PythonCreatureScript();
-    new PythonAllCreatureScript();
 }
