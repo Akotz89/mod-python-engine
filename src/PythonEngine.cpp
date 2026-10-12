@@ -315,11 +315,15 @@ bool PythonEngine::LoadScripts()
     try
     {
         API::Object sys = API::Import("sys");
-        API::Dict modules = boost::python::extract<API::Dict>(sys.attr("modules"));
+        API::Object modulesObject = sys.attr("modules");
+        API::Object pathObject = sys.attr("path");
+        API::Object metaPathObject = sys.attr("meta_path");
+        API::Dict modules = boost::python::extract<API::Dict>(modulesObject);
         API::Dict previousModules = boost::python::extract<API::Dict>(modules.attr("copy")());
-        API::Object previousPath = API::Import("copy").attr("copy")(sys.attr("path"));
-        API::Object previousMetaPath = API::List(sys.attr("meta_path"));
-        sys.attr("path") = API::List(sys.attr("path"));
+        // Python call arguments must be concrete objects, not Boost attribute proxies.
+        API::Object previousPath = API::Import("copy").attr("copy")(pathObject);
+        API::Object previousMetaPath = API::List(metaPathObject);
+        sys.attr("path") = API::List(pathObject);
         bool published = false;
         struct ImportRollback
         {
