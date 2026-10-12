@@ -13,6 +13,7 @@ namespace PyEng::Bridge
     struct CallbackLease
     {
         bool active = true;
+        bool gameplayAllowed = true;
         std::thread::id thread = std::this_thread::get_id();
         std::vector<std::function<void()>> commits;
     };
@@ -33,6 +34,17 @@ namespace PyEng::Bridge
         }
     }
 
+    inline void CheckGameplayContext()
+    {
+        CheckLease(currentCallbackLease);
+        if (!currentCallbackLease->gameplayAllowed)
+        {
+            PyErr_SetString(PyExc_RuntimeError,
+                "game objects require a native game callback; use Schedule and resolve a copied GUID on the world thread");
+            boost::python::throw_error_already_set();
+        }
+    }
+
     struct BorrowedReference
     {
         PyObject* weakref;
@@ -46,6 +58,7 @@ namespace PyEng::Bridge
     {
         PyTypeObject* type;
         std::function<void const*(PyObject*)> pointer;
+        bool gameplayOwned;
     };
     inline std::vector<BorrowedType> borrowedTypes;
 
@@ -90,8 +103,10 @@ namespace PyEng::Bridge
     class CallbackScope
     {
     public:
-        CallbackScope() : previous(currentCallbackLease), lease(std::make_shared<CallbackLease>())
+        explicit CallbackScope(bool gameplayAllowed = true)
+            : previous(currentCallbackLease), lease(std::make_shared<CallbackLease>())
         {
+            lease->gameplayAllowed = gameplayAllowed;
             PruneBorrowedReferences();
             currentCallbackLease = lease;
         }
@@ -112,13 +127,13 @@ namespace PyEng::Bridge
     };
 
     template<typename T>
-    inline void RegisterBorrowedType(boost::python::object const& type)
+    inline void RegisterBorrowedType(boost::python::object const& type, bool gameplayOwned = false)
     {
         borrowedTypes.push_back({reinterpret_cast<PyTypeObject*>(type.ptr()), [](PyObject* value) -> void const*
         {
             boost::python::object object(boost::python::handle<>(boost::python::borrowed(value)));
             return boost::python::extract<T const*>(object);
-        }});
+        }, gameplayOwned});
     }
 
     inline BorrowedType const* FindBorrowedType(PyObject* value)
@@ -143,6 +158,8 @@ namespace PyEng::Bridge
         if (!value || !IsBorrowedType(value))
             return;
         CheckLease(currentCallbackLease);
+        if (FindBorrowedType(value)->gameplayOwned)
+            CheckGameplayContext();
         auto found = borrowedReferences.find(value);
         if (found != borrowedReferences.end())
         {
@@ -178,6 +195,8 @@ namespace PyEng::Bridge
             boost::python::throw_error_already_set();
         }
         CheckLease(found->second.lease);
+        if (FindBorrowedType(value)->gameplayOwned)
+            CheckGameplayContext();
     }
 
     template<typename Base = boost::python::default_call_policies>

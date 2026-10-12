@@ -13,7 +13,7 @@ using PyEng::Bridge::RegisterBorrowedType;
 void export_object_class()
 {
     bp::class_<Object, boost::noncopyable> object_class("Object", bp::no_init);
-    RegisterBorrowedType<Object>(object_class);
+    RegisterBorrowedType<Object>(object_class, true);
 
     // common
     object_class.def("GetObjectGUID", static_cast<ObjectGuid (Object::*)() const>(&Object::GetGUID), BorrowedPolicy<>());

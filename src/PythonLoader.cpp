@@ -53,6 +53,7 @@ public:
 
     void OnUpdate(uint32 diff) override
     {
+        sPythonEngine->RunScheduledCallbacks();
         if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
             sPythonEngine->RunPopulationTick(diff);
     }

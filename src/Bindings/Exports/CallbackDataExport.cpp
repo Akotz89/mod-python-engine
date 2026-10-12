@@ -26,33 +26,37 @@ void export_callback_data_classes()
     corpse.def("GetOwnerGUID", &Corpse::GetOwnerGUID, BorrowedPolicy<>());
 
     bp::class_<Spell, boost::noncopyable> spell("Spell", bp::no_init);
-    RegisterBorrowedType<Spell>(spell);
+    RegisterBorrowedType<Spell>(spell, true);
     spell.def("GetCaster", &Spell::GetCaster, BorrowedReturn());
     spell.def("GetSpellInfo", &Spell::GetSpellInfo, BorrowedReturn());
 
     bp::class_<Aura, boost::noncopyable> aura("Aura", bp::no_init);
-    RegisterBorrowedType<Aura>(aura);
+    RegisterBorrowedType<Aura>(aura, true);
     aura.def("GetId", &Aura::GetId, BorrowedPolicy<>());
     aura.def("GetCaster", &Aura::GetCaster, BorrowedReturn());
     aura.def("GetSpellInfo", &Aura::GetSpellInfo, BorrowedReturn());
 
     bp::class_<AuraApplication, boost::noncopyable> auraApplication("AuraApplication", bp::no_init);
-    RegisterBorrowedType<AuraApplication>(auraApplication);
+    RegisterBorrowedType<AuraApplication>(auraApplication, true);
     auraApplication.def("GetTarget", &AuraApplication::GetTarget, BorrowedReturn());
 
     bp::class_<WorldSession, boost::noncopyable> session("WorldSession", bp::no_init);
     RegisterBorrowedType<WorldSession>(session);
     session.def("GetAccountId", &WorldSession::GetAccountId, BorrowedPolicy<>());
     session.def("GetSecurity", +[](WorldSession const& value) { return static_cast<uint32>(value.GetSecurity()); }, BorrowedPolicy<>());
-    session.def("GetPlayer", &WorldSession::GetPlayer, BorrowedReturn());
+    session.def("GetPlayer", +[](WorldSession const& value)
+    {
+        CheckGameplayContext();
+        return value.GetPlayer();
+    }, BorrowedReturn());
 
     bp::class_<Group, boost::noncopyable> group("Group", bp::no_init);
-    RegisterBorrowedType<Group>(group);
+    RegisterBorrowedType<Group>(group, true);
     group.def("GetLeaderGUID", &Group::GetLeaderGUID, BorrowedPolicy<>());
     group.def("GetMembersCount", &Group::GetMembersCount, BorrowedPolicy<>());
 
     bp::class_<Guild, boost::noncopyable> guild("Guild", bp::no_init);
-    RegisterBorrowedType<Guild>(guild);
+    RegisterBorrowedType<Guild>(guild, true);
     guild.def("GetId", &Guild::GetId, BorrowedPolicy<>());
     guild.def("GetName", &Guild::GetName, CopiedString());
     guild.def("GetLeaderGUID", &Guild::GetLeaderGUID, BorrowedPolicy<>());

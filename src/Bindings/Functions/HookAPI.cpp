@@ -45,6 +45,15 @@ namespace
             RejectRegistration(eventName);
     }
 
+    void Schedule(API::Object callback)
+    {
+        if (!sPythonEngine->Schedule(callback))
+        {
+            PyErr_SetString(PyExc_RuntimeError, "Schedule requires an enabled engine, a callable, and no concurrent reload");
+            bp::throw_error_already_set();
+        }
+    }
+
 } // anonymous namespace
 
 /**
@@ -52,6 +61,8 @@ namespace
  */
 void export_hook_api()
 {
+    bp::def("Schedule", &Schedule);
+
     // Usage: azerothcore.Register("PLAYER_ON_LOGIN", on_login)
     bp::def("Register", &RegisterGlobal);
 

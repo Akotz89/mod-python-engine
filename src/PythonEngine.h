@@ -144,6 +144,13 @@ public:
         return IsEnabled() && initializationThread == std::this_thread::get_id();
     }
 
+    [[nodiscard]] bool IsWorldThread() const noexcept
+    {
+        return initializationThread == std::this_thread::get_id();
+    }
+    [[nodiscard]] bool Schedule(API::Object callback);
+    void RunScheduledCallbacks();
+
     [[nodiscard]] bool RunPopulationTick(uint32 diff);
 
     [[nodiscard]] bool RegisterSafeEvent(std::string const& eventName, API::Object callback);
@@ -162,7 +169,7 @@ public:
         {
             try
             {
-                CallbackScope scope;
+                CallbackScope scope(hook.category != PyEng::Hooks::Category::SERVER || IsWorldThread());
                 Call(callback, args...);
             }
             catch (...)
@@ -186,7 +193,7 @@ public:
         {
             try
             {
-                CallbackScope scope;
+                CallbackScope scope(hook.category != PyEng::Hooks::Category::SERVER || IsWorldThread());
                 API::Object result = Call(callback, args...);
                 if (API::IsNone(result))
                     continue;
@@ -281,6 +288,8 @@ private:
 
     HookRegistry hookMap;
     inline static thread_local HookRegistry* candidateRegistrationTarget = nullptr;
+    CallbackList scheduledCallbacks;
+    inline static thread_local CallbackList* candidateScheduledTarget = nullptr;
     SafeEventRegistry safeEventMap;
     inline static thread_local SafeEventRegistry* candidateSafeEventRegistrationTarget = nullptr;
     API::Object main_namespace;

@@ -186,6 +186,7 @@ void PythonEngine::Initialize()
                 mainThreadState = nullptr;
             }
             hookMap.clear();
+            scheduledCallbacks.clear();
             safeEventMap.clear();
             main_namespace = API::Object();
             ClearBorrowedReferences();
@@ -230,6 +231,7 @@ void PythonEngine::Shutdown()
     std::unique_lock<std::shared_mutex> lock(hookMutex);
     mainThreadState = nullptr;
     hookMap.clear();
+    scheduledCallbacks.clear();
     safeEventMap.clear();
     populationCallback = API::Object();
     main_namespace = API::Object(); // Release main module ref while holding the GIL
@@ -306,6 +308,7 @@ bool PythonEngine::LoadScripts()
     CallbackScope scope;
     HookRegistry candidateHookMap;
     SafeEventRegistry candidateSafeEventMap;
+    CallbackList candidateScheduledCallbacks;
     API::Object candidateNamespace;
     API::Object candidatePopulationCallback;
     int count = 0;
@@ -315,6 +318,7 @@ bool PythonEngine::LoadScripts()
         API::Dict modules = boost::python::extract<API::Dict>(sys.attr("modules"));
         API::Dict previousModules = boost::python::extract<API::Dict>(modules.attr("copy")());
         API::Object previousPath = API::Import("copy").attr("copy")(sys.attr("path"));
+        API::Object previousMetaPath = API::List(sys.attr("meta_path"));
         sys.attr("path") = API::List(sys.attr("path"));
         bool published = false;
         struct ImportRollback
@@ -323,6 +327,7 @@ bool PythonEngine::LoadScripts()
             API::Dict& previous;
             API::Object& sys;
             API::Object& previousPath;
+            API::Object& previousMetaPath;
             bool& published;
             ~ImportRollback()
             {
@@ -333,6 +338,7 @@ bool PythonEngine::LoadScripts()
                         modules.clear();
                         modules.update(previous);
                         sys.attr("path") = previousPath;
+                        sys.attr("meta_path") = previousMetaPath;
                     }
                     catch (...)
                     {
@@ -341,7 +347,7 @@ bool PythonEngine::LoadScripts()
                     }
                 }
             }
-        } importRollback{modules, previousModules, sys, previousPath, published};
+        } importRollback{modules, previousModules, sys, previousPath, previousMetaPath, published};
 
         API::Dict namespaceDictionary;
         namespaceDictionary["__builtins__"] = API::Import("builtins");
@@ -350,15 +356,34 @@ bool PythonEngine::LoadScripts()
         candidateNamespace = namespaceDictionary;
         // Reload local imports too; rejected candidates restore the prior module registry.
         API::Exec(R"PY(
-import sys as _engine_sys, pathlib as _engine_pathlib, importlib as _engine_importlib
-_engine_root = _engine_pathlib.Path(__script_root__).resolve()
-for _engine_name, _engine_module in list(_engine_sys.modules.items()):
-    _engine_file = getattr(_engine_module, '__file__', None)
-    if _engine_file and _engine_pathlib.Path(_engine_file).resolve().is_relative_to(_engine_root):
-        del _engine_sys.modules[_engine_name]
-for _engine_cache in _engine_root.rglob('__pycache__/*.pyc'):
-    _engine_cache.unlink()
-_engine_importlib.invalidate_caches()
+def _engine_refresh_sources(script_root):
+    import sys, pathlib, importlib, importlib.machinery as machinery
+    root = pathlib.Path(script_root).resolve()
+    for name, module in list(sys.modules.items()):
+        filename = getattr(module, '__file__', None)
+        if filename and pathlib.Path(filename).resolve().is_relative_to(root):
+            del sys.modules[name]
+    class FreshSourceLoader(machinery.SourceFileLoader):
+        def get_code(self, fullname):
+            filename = self.get_filename(fullname)
+            return self.source_to_code(self.get_data(filename), filename)
+    class RootSourceFinder:
+        _python_engine_source_finder = True
+        def find_spec(self, fullname, path=None, target=None):
+            spec = machinery.PathFinder.find_spec(fullname, path, target)
+            if (spec and spec.origin and isinstance(spec.loader, machinery.SourceFileLoader)
+                    and pathlib.Path(spec.origin).resolve().is_relative_to(root)):
+                spec.loader = FreshSourceLoader(fullname, spec.origin)
+                return spec
+            return None
+    finders = [finder for finder in sys.meta_path
+               if not getattr(finder, '_python_engine_source_finder', False)]
+    index = next((i for i, finder in enumerate(finders) if finder is machinery.PathFinder), len(finders))
+    finders.insert(index, RootSourceFinder())
+    sys.meta_path = finders
+    importlib.invalidate_caches()
+_engine_refresh_sources(__script_root__)
+del _engine_refresh_sources
 )PY", candidateNamespace, candidateNamespace);
 
         API::Object sysPath = API::Import("sys").attr("path");
@@ -367,6 +392,7 @@ _engine_importlib.invalidate_caches()
             sysPath.attr("insert")(0, scriptRoot);
 
         candidateRegistrationTarget = &candidateHookMap;
+        candidateScheduledTarget = &candidateScheduledCallbacks;
         candidateSafeEventRegistrationTarget = &candidateSafeEventMap;
 
         for (fs::path const& scriptFile : scriptFiles)
@@ -382,6 +408,7 @@ _engine_importlib.invalidate_caches()
             catch (...)
             {
                 candidateRegistrationTarget = nullptr;
+                candidateScheduledTarget = nullptr;
                 candidateSafeEventRegistrationTarget = nullptr;
                 LOG_ERROR("module.python", "Failed to execute script: {}", scriptFile.string());
                 auto error = ExceptionHelper::Format();
@@ -393,6 +420,7 @@ _engine_importlib.invalidate_caches()
             }
         }
         candidateRegistrationTarget = nullptr;
+        candidateScheduledTarget = nullptr;
         candidateSafeEventRegistrationTarget = nullptr;
 
         if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
@@ -412,6 +440,7 @@ _engine_importlib.invalidate_caches()
 
         std::unique_lock<std::shared_mutex> lock(hookMutex);
         hookMap.swap(candidateHookMap);
+        scheduledCallbacks.swap(candidateScheduledCallbacks);
         safeEventMap.swap(candidateSafeEventMap);
         std::swap(main_namespace, candidateNamespace);
         if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
@@ -428,6 +457,7 @@ _engine_importlib.invalidate_caches()
     catch (...)
     {
         candidateRegistrationTarget = nullptr;
+        candidateScheduledTarget = nullptr;
         candidateSafeEventRegistrationTarget = nullptr;
         auto error = ExceptionHelper::Format();
         LOG_ERROR("module.python", "Candidate reload failed before publication: {}", error);

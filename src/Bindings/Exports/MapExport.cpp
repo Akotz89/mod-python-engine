@@ -7,6 +7,7 @@
 #include "MapMgr.h"
 #include "DBCStores.h"
 #include "PythonEngine.h"
+#include "ObjectAccessor.h"
 
 namespace bp = boost::python;
 using PyEng::Bridge::BorrowedPolicy;
@@ -22,6 +23,17 @@ namespace
             throw std::invalid_argument("unknown map ID");
         return sMapMgr->CreateBaseMap(mapId);
     }
+
+    Player* GetPlayer(ObjectGuid guid)
+    {
+        if (!sPythonEngine->IsNativeCapabilityCallAllowed())
+            throw std::runtime_error("player lookup requires the world thread");
+        if (guid.IsEmpty() || !guid.IsPlayer())
+            throw std::invalid_argument("GUID must identify a player");
+        return ObjectAccessor::FindConnectedPlayer(guid);
+    }
+
+    Player* GetPlayerRaw(uint64 guid) { return GetPlayer(ObjectGuid(guid)); }
 
     void LoadGrid(Map* map, float x, float y)
     {
@@ -39,7 +51,7 @@ namespace
 void export_map_class()
 {
     bp::class_<Map, boost::noncopyable> map_class("Map", bp::no_init);
-    RegisterBorrowedType<Map>(map_class);
+    RegisterBorrowedType<Map>(map_class, true);
 
     // common
     map_class.def("GetId", &Map::GetId, BorrowedPolicy<>());
@@ -64,6 +76,8 @@ void export_map_class()
 
     map_class.def("LoadGrid", &LoadGrid, BorrowedPolicy<>());
     bp::def("GetMap", &GetMap, BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
+    bp::def("GetPlayer", &GetPlayer, BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
+    bp::def("GetPlayer", &GetPlayerRaw, BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
 
     // location
     map_class.def("GetHeight", static_cast<float (Map::*)(float, float, float, bool, float) const>(&Map::GetHeight), BorrowedPolicy<>(),

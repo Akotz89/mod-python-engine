@@ -11,6 +11,14 @@ inspection inputs; changes to event decisions use the hook's native return or
 mutable arguments. The module adds no database synchronization or persistence
 behind these fields.
 
+Packet/network callbacks can inspect their packet and session data. Live game
+objects and mutable gameplay records require their native gameplay callback or
+the world thread. Use `azerothcore.Schedule(callback)` to enqueue work on a later
+world update, copy GUIDs and scalar values into the scheduled work, and reacquire
+a player with `azerothcore.GetPlayer(guid)`. Do not capture borrowed Player/Map
+objects for a later callback. This follows core thread ownership; packet editing
+remains available directly in packet callbacks.
+
 | Class | Useful fields and methods |
 | --- | --- |
 | ByteBuffer | Size, GetBytes, AppendBytes, GetReadPosition, SetReadPosition; ReadUInt8/16/32/64 and ReadFloat; GetUInt8/16/32; PutUInt8/16/32; AppendUInt8/16/32 |

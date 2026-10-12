@@ -38,7 +38,7 @@ void export_item_template_struct()
 void export_item_class()
 {
     bp::class_<Item, boost::noncopyable> item_class("Item", bp::no_init);
-    RegisterBorrowedType<Item>(item_class);
+    RegisterBorrowedType<Item>(item_class, true);
 
     // data ref
     item_class.def("GetTemplate", &Item::GetTemplate, BorrowedPolicy<bp::return_internal_reference<>>());

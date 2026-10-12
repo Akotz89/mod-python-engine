@@ -30,11 +30,13 @@ ac.Register("CREATURE_ON_GOSSIP_HELLO", greet, 99999)
 
 An entry ID of zero receives every event in its category; an NPC/item/gameobject entry selects that template. Global callbacks run before entry callbacks. `Register` also works from running callbacks or administrator `python exec`; callback snapshots keep registration and recursive native events safe.
 
-Administrators and the server console use `python status`, `python reload` and `python exec <code>`, with AzerothCore's existing administrator command permission. Reload replaces the callback registry and namespace only after every script succeeds. Edited imports below the script root are refreshed too; a rejected candidate restores the prior imported-module registry. External/native effects performed while loading are not transactions and cannot be rolled back.
+Administrators and the server console use `python status`, `python reload` and `python exec <code>`, with AzerothCore's existing administrator command permission. Reload replaces the callback registry and namespace only after every script succeeds. Edited imports below the script root are refreshed too; a rejected candidate restores the prior imported-module registry. Pending scheduled callbacks belong to the script generation: successful reload publishes the new staged queue; a rejected reload retains the previous queue. External/native effects performed while loading are not transactions and cannot be rolled back.
 
 ## Native decisions and references
 
 Void events ignore callback results. For native boolean permit hooks, `False` vetoes; handled hooks combine `True` results. `None` keeps the native default. Nonboolean results use the last valid non-`None` value. Exceptions and invalid result conversions are logged without escaping into the core. Mutable arguments expose `.get()` and `.set(value)` and commit back to the original native reference when the callback finishes.
+
+Network callbacks operate on packet/session metadata. Use `ac.Schedule(callback)` to run gameplay work on the next world tick; capture GUIDs/copied data and reacquire an online player with `ac.GetPlayer(guid)` inside that callback. Map callbacks keep their native map execution context. A network thread cannot directly touch world/map-owned gameplay objects.
 
 Native object and mutable-reference wrappers belong to the callback where they were received. Retaining a wrapper is allowed, but calling it after that callback returns raises `ReferenceError`; use GUIDs or copied values across callbacks. Using it from another thread raises `RuntimeError`. Owning value objects such as Position and ObjectGuid remain ordinary values. Native entity removal invalidates its borrowed wrappers.
 

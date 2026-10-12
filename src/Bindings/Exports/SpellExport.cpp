@@ -64,7 +64,7 @@ void export_spellinfo_class()
 void export_spellcast_targets_class()
 {
     bp::class_<SpellCastTargets> spellcast_targets_class("SpellCastTargets", bp::no_init);
-    RegisterBorrowedType<SpellCastTargets>(spellcast_targets_class);
+    RegisterBorrowedType<SpellCastTargets>(spellcast_targets_class, true);
 
     // target ref
     spellcast_targets_class.def("GetUnitTarget", &SpellCastTargets::GetUnitTarget,

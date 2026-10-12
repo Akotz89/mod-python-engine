@@ -87,10 +87,10 @@ namespace PyEng::EventData
         buffer.rpos(position);
     }
 
-    template<typename T> bp::class_<T, boost::noncopyable> Record(char const* name)
+    template<typename T> bp::class_<T, boost::noncopyable> Record(char const* name, bool gameplayOwned = false)
     {
         bp::class_<T, boost::noncopyable> result(name, bp::no_init);
-        RegisterBorrowedType<T>(result);
+        RegisterBorrowedType<T>(result, gameplayOwned);
         return result;
     }
 
@@ -131,7 +131,7 @@ void export_event_data_classes()
     packet.def("GetOpcode", &WorldPacket::GetOpcode, BorrowedPolicy<>());
     packet.def("SetOpcode", &WorldPacket::SetOpcode, BorrowedPolicy<>());
 
-    auto effect = Record<AuraEffect>("AuraEffect");
+    auto effect = Record<AuraEffect>("AuraEffect", true);
     effect.def("GetId", &AuraEffect::GetId, BorrowedPolicy<>());
     effect.def("GetEffIndex", &AuraEffect::GetEffIndex, BorrowedPolicy<>());
     effect.def("GetAmount", &AuraEffect::GetAmount, BorrowedPolicy<>());
@@ -141,14 +141,14 @@ void export_event_data_classes()
     effect.def("GetBase", &AuraEffect::GetBase, BorrowedReturn());
     effect.def("GetSpellInfo", &AuraEffect::GetSpellInfo, BorrowedReturn());
 
-    auto arena = Record<ArenaTeam>("ArenaTeam");
+    auto arena = Record<ArenaTeam>("ArenaTeam", true);
     arena.def("GetId", &ArenaTeam::GetId, BorrowedPolicy<>());
     arena.def("GetType", &ArenaTeam::GetType, BorrowedPolicy<>());
     arena.def("GetName", &ArenaTeam::GetName, CopiedString());
     arena.def("GetCaptain", &ArenaTeam::GetCaptain, BorrowedPolicy<>());
     arena.def("GetRating", &ArenaTeam::GetRating, BorrowedPolicy<>());
 
-    auto battleground = Record<Battleground>("Battleground");
+    auto battleground = Record<Battleground>("Battleground", true);
     battleground.def("GetName", &Battleground::GetName, BorrowedPolicy<>());
     battleground.def("GetMapId", &Battleground::GetMapId, BorrowedPolicy<>());
     battleground.def("GetInstanceID", &Battleground::GetInstanceID, BorrowedPolicy<>());
@@ -156,14 +156,14 @@ void export_event_data_classes()
     battleground.def("GetStatus", +[](Battleground const& value) { return static_cast<uint32>(value.GetStatus()); }, BorrowedPolicy<>());
     battleground.def("GetWinner", +[](Battleground const& value) { return static_cast<uint32>(value.GetWinner()); }, BorrowedPolicy<>());
 
-    auto channel = Record<Channel>("Channel");
+    auto channel = Record<Channel>("Channel", true);
     channel.def("GetName", &Channel::GetName, CopiedString());
     channel.def("GetChannelId", &Channel::GetChannelId, BorrowedPolicy<>());
     channel.def("GetNumPlayers", &Channel::GetNumPlayers, BorrowedPolicy<>());
     channel.def("GetFlags", &Channel::GetFlags, BorrowedPolicy<>());
     channel.def("IsLFG", &Channel::IsLFG, BorrowedPolicy<>());
 
-    auto instance = Record<InstanceScript>("InstanceScript");
+    auto instance = Record<InstanceScript>("InstanceScript", true);
     instance.def("GetMap", +[](InstanceScript const& value) { return value.instance; }, BorrowedReturn());
     instance.def("GetBossState", +[](InstanceScript const& value, uint32 id) { return static_cast<uint32>(value.GetBossState(id)); }, BorrowedPolicy<>());
     instance.def("SetBossState", +[](InstanceScript& value, uint32 id, uint32 state)
@@ -191,15 +191,15 @@ void export_event_data_classes()
     ReadField(criteria, "timeLimit", &AchievementCriteriaEntry::timeLimit);
     criteria.add_property("asset", bp::make_function(+[](AchievementCriteriaEntry const& value) { return value.raw.field3; }, BorrowedPolicy<>()));
     criteria.add_property("count", bp::make_function(+[](AchievementCriteriaEntry const& value) { return value.raw.count; }, BorrowedPolicy<>()));
-    auto progress = Record<CriteriaProgress>("CriteriaProgress");
+    auto progress = Record<CriteriaProgress>("CriteriaProgress", true);
     ReadField(progress, "counter", &CriteriaProgress::counter);
     ReadField(progress, "date", &CriteriaProgress::date);
     ReadField(progress, "changed", &CriteriaProgress::changed);
-    auto manager = Record<AchievementMgr>("AchievementMgr");
+    auto manager = Record<AchievementMgr>("AchievementMgr", true);
     manager.def("GetPlayer", &AchievementMgr::GetPlayer, BorrowedReturn());
     manager.def("HasAchieved", &AchievementMgr::HasAchieved, BorrowedPolicy<>());
     manager.def("GetCriteriaProgress", &AchievementMgr::GetCriteriaProgress, BorrowedReturn());
-    auto globalManager = Record<AchievementGlobalMgr>("AchievementGlobalMgr");
+    auto globalManager = Record<AchievementGlobalMgr>("AchievementGlobalMgr", true);
     globalManager.def("IsRealmCompleted", &AchievementGlobalMgr::IsRealmCompleted, BorrowedPolicy<>());
     globalManager.def("GetAchievement", &AchievementGlobalMgr::GetAchievement, BorrowedReturn());
 
@@ -251,7 +251,7 @@ void export_event_data_classes()
     requirements.def("GetItems", +[](DungeonProgressionRequirements const& value) { return Converter::ToPython(value.items); }, BorrowedPolicy<>());
     requirements.def("GetAchievements", +[](DungeonProgressionRequirements const& value) { return Converter::ToPython(value.achievements); }, BorrowedPolicy<>());
 
-    auto auction = Record<AuctionEntry>("AuctionEntry");
+    auto auction = Record<AuctionEntry>("AuctionEntry", true);
     ReadField(auction, "Id", &AuctionEntry::Id);
     ReadField(auction, "item_guid", &AuctionEntry::item_guid);
     ReadField(auction, "item_template", &AuctionEntry::item_template);
@@ -264,7 +264,7 @@ void export_event_data_classes()
     ReadField(auction, "expire_time", &AuctionEntry::expire_time);
     ReadField(auction, "deposit", &AuctionEntry::deposit);
 
-    auto lootItem = Record<LootItem>("LootItem");
+    auto lootItem = Record<LootItem>("LootItem", true);
     ReadField(lootItem, "itemid", &LootItem::itemid);
     ReadField(lootItem, "itemIndex", &LootItem::itemIndex);
     ReadField(lootItem, "randomSuffix", &LootItem::randomSuffix);
@@ -276,7 +276,7 @@ void export_event_data_classes()
     }, BorrowedPolicy<>()));
     lootItem.add_property("is_looted", bp::make_function(+[](LootItem const& value) { return bool(value.is_looted); }, BorrowedPolicy<>()));
     lootItem.add_property("needs_quest", bp::make_function(+[](LootItem const& value) { return bool(value.needs_quest); }, BorrowedPolicy<>()));
-    auto loot = Record<Loot>("Loot");
+    auto loot = Record<Loot>("Loot", true);
     ReadField(loot, "gold", &Loot::gold);
     ReadField(loot, "unlootedCount", &Loot::unlootedCount);
     ReadField(loot, "lootOwnerGUID", &Loot::lootOwnerGUID);
@@ -293,7 +293,7 @@ void export_event_data_classes()
     ReadField(vendor, "maxcount", &VendorItem::maxcount);
     ReadField(vendor, "incrtime", &VendorItem::incrtime);
     ReadField(vendor, "ExtendedCost", &VendorItem::ExtendedCost);
-    auto roll = Record<Roll>("Roll");
+    auto roll = Record<Roll>("Roll", true);
     ReadField(roll, "itemGUID", &Roll::itemGUID);
     ReadField(roll, "itemid", &Roll::itemid);
     ReadField(roll, "itemCount", &Roll::itemCount);
@@ -302,7 +302,7 @@ void export_event_data_classes()
     ReadField(roll, "totalGreed", &Roll::totalGreed);
     ReadField(roll, "totalPass", &Roll::totalPass);
 
-    auto movement = Record<MovementInfo>("MovementInfo");
+    auto movement = Record<MovementInfo>("MovementInfo", true);
     ReadField(movement, "guid", &MovementInfo::guid);
     ReadField(movement, "flags", &MovementInfo::flags);
     ReadField(movement, "flags2", &MovementInfo::flags2);
@@ -347,7 +347,7 @@ void export_event_data_classes()
     scaling.def("GetArmorMod", &ScalingStatValuesEntry::getArmorMod, BorrowedPolicy<>());
     scaling.def("GetDPSMod", &ScalingStatValuesEntry::getDPSMod, BorrowedPolicy<>());
     scaling.def("GetStatMultiplier", &ScalingStatValuesEntry::getssdMultiplier, BorrowedPolicy<>());
-    auto rewarder = Record<KillRewarder>("KillRewarder");
+    auto rewarder = Record<KillRewarder>("KillRewarder", true);
     rewarder.def("GetVictim", &KillRewarder::GetVictim, BorrowedReturn());
     rewarder.def("GetKiller", &KillRewarder::GetKiller, BorrowedReturn());
 }

@@ -17,6 +17,7 @@ public:
     {
         auto* engine = new PythonEngine;
         engine->enabled.store(true);
+        engine->initializationThread = std::this_thread::get_id();
         return engine;
     }
     static void Destroy(PythonEngine* engine) { delete engine; }
@@ -34,6 +35,7 @@ static void AddDuringCallback(bp::object callback)
 {
     PythonEngineTestAccess::Add(testEngine, testHook, 0, callback);
 }
+static bool ScheduleTest(bp::object callback) { return testEngine->Schedule(callback); }
 
 void export_mutable_types();
 
@@ -41,6 +43,7 @@ BOOST_PYTHON_MODULE(dispatch_test)
 {
     export_mutable_types();
     bp::def("register_dynamic", AddDuringCallback);
+    bp::def("schedule", ScheduleTest);
 }
 
 int main()
@@ -53,7 +56,7 @@ int main()
         bp::dict globals;
         globals["__builtins__"] = bp::import("builtins");
         bp::exec(R"PY(
-from dispatch_test import register_dynamic
+from dispatch_test import register_dynamic, schedule
 seen = []
 registered = False
 saved_ref = None
@@ -86,6 +89,17 @@ def mutable_string_first(value):
     saved_string_ref = value
     value.set('first')
 def mutable_string_second(value): value.set(value.get() + '_second')
+queued_seen = []
+def scheduled_second(): queued_seen.append('second')
+def scheduled_first():
+    queued_seen.append('first')
+    assert schedule(scheduled_second)
+def scheduled_broken(): raise BrokenStringException()
+def scheduled_tail(): queued_seen.append('tail')
+def schedule_from_event(value):
+    assert schedule(scheduled_first)
+    assert schedule(scheduled_broken)
+    assert schedule(scheduled_tail)
 )PY", globals, globals);
         auto add = [&](char const* name, uint32 entry = 0)
         {
@@ -142,6 +156,24 @@ else:
         assert(testEngine->BeginReload());
         assert(testEngine->TriggerResult(testHook, 0, uint32(88)) == 88);
         testEngine->EndReload();
+        PythonEngineTestAccess::Clear(testEngine);
+        add("schedule_from_event");
+        testEngine->Trigger(testHook, 0, 1);
+        assert(bp::len(globals["queued_seen"]) == 0);
+        testEngine->RunScheduledCallbacks();
+        bp::exec("assert queued_seen == ['first', 'tail']", globals, globals);
+        assert(!PyErr_Occurred());
+        testEngine->RunScheduledCallbacks();
+        bp::exec("assert queued_seen == ['first', 'tail', 'second']", globals, globals);
+        assert(!testEngine->Schedule(bp::object(42)));
+        assert(testEngine->Schedule(globals["scheduled_tail"]));
+        assert(testEngine->BeginReload());
+        assert(!testEngine->Schedule(globals["scheduled_tail"]));
+        testEngine->RunScheduledCallbacks();
+        assert(bp::len(globals["queued_seen"]) == 3);
+        testEngine->EndReload();
+        testEngine->RunScheduledCallbacks();
+        assert(bp::len(globals["queued_seen"]) == 4);
         PythonEngineTestAccess::Destroy(testEngine);
         testEngine = nullptr;
         PyEng::Bridge::ClearBorrowedReferences();
@@ -152,5 +184,5 @@ else:
         return 1;
     }
     Py_FinalizeEx();
-    std::cout << "PASS: real CPython dispatcher global/entry order, dynamic snapshot, exception containment, boolean/optional/numeric returns, sequential scalar/string mutable commits, expired refs, reload fallback\n";
+    std::cout << "PASS: real CPython dispatcher global/entry order, dynamic snapshot, exception containment, boolean/optional/numeric returns, sequential scalar/string mutable commits, expired refs, reload fallback; real world queue event scheduling, next-drain snapshots, malformed exceptions, invalid callbacks, reload rejection/preservation\n";
 }
