@@ -24,7 +24,7 @@ void export_player_class()
 
     // level
     player_class.def("GiveXP", &GiveXP, BorrowedPolicy<>(),
-                     (bp::arg("xp"), bp::arg("victim") = static_cast<Unit*>(nullptr),
+                     (bp::arg("xp"), bp::arg("victim") = bp::object(),
                       bp::arg("group_rate") = 1.0f, bp::arg("isLFGReward") = false));
     player_class.def("GiveLevel", &Player::GiveLevel, BorrowedPolicy<>());
     player_class.def("SetXP", &SetXP, BorrowedPolicy<>());

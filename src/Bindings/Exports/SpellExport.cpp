@@ -52,10 +52,10 @@ void export_spellinfo_class()
     // helpers
     spellinfo_class.def("GetDuration", &SpellInfo::GetDuration, BorrowedPolicy<>());
     spellinfo_class.def("GetMaxRange", &SpellInfo::GetMaxRange, BorrowedPolicy<>(),
-                        (bp::arg("positive") = false, bp::arg("caster") = static_cast<Unit*>(nullptr),
-                         bp::arg("spell") = static_cast<Spell*>(nullptr)));
+                        (bp::arg("positive") = false, bp::arg("caster") = bp::object(),
+                         bp::arg("spell") = bp::object()));
     spellinfo_class.def("CalcCastTime", &SpellInfo::CalcCastTime, BorrowedPolicy<>(),
-                        (bp::arg("caster") = static_cast<Unit*>(nullptr), bp::arg("spell") = static_cast<Spell*>(nullptr)));
+                        (bp::arg("caster") = bp::object(), bp::arg("spell") = bp::object()));
 }
 
 /**
