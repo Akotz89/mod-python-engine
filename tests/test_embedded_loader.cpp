@@ -117,10 +117,27 @@ assert sum(bool(getattr(f, '_python_engine_source_finder', False)) for f in sys.
 )PY");
     // Prepare tuple path input and a pending accepted queue callback before a rejected candidate.
     Exec(engine, "sys.path = tuple(sys.path)\nac.Schedule(lambda: seen.append('accepted_queue'))\n");
+    API::Object acceptedDependency;
+    API::Object acceptedPath;
+    {
+        GILGuard gil;
+        acceptedDependency = API::Import("loader_dependency");
+        acceptedPath = API::Import("sys").attr("path");
+    }
     fs::permissions(root, fs::perms::owner_all);
     Write(root / "z_reject.py", "ac.Schedule(lambda: seen.append('rejected_queue'))\nraise RuntimeError('intentional rejected load')\n");
     assert(!engine->LoadScripts());
     assert(!engine->IsReloading());
+    assert(Read(cache) == cacheBytes);
+    {
+        GILGuard gil;
+        assert(API::Import("loader_dependency").ptr() == acceptedDependency.ptr());
+        API::Object restoredPath = API::Import("sys").attr("path");
+        assert(restoredPath.ptr() == acceptedPath.ptr());
+        assert(!PyErr_Occurred());
+        acceptedDependency = API::Object();
+        acceptedPath = API::Object();
+    }
     engine->RunScheduledCallbacks();
     engine->Trigger(PyEng::Hooks::World::ON_UPDATE, 0, uint32(1));
     Exec(engine, "assert seen == ['v2', 'accepted_queue', 'v2']\nassert isinstance(sys.path, tuple)\nassert loader_dependency.GENERATION == 'v2'\n");
