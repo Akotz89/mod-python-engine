@@ -218,6 +218,12 @@ public:
 
     static void TriggerHook(HookInfo* hinfo, uint32 entryId);
 
+    // Passive registry observation only; the existing shared lock guards global0 plus exact entry.
+    [[nodiscard]] bool HasRegisteredCallbacks(HookInfo hook, uint32 entryId) const
+    {
+        return HasCallbacks(hook, entryId);
+    }
+
 private:
     using CallbackList = std::vector<API::Object>;
     using HookEntryMap = std::unordered_map<uint32, CallbackList>;

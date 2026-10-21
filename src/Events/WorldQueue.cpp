@@ -1,4 +1,5 @@
 #include "PythonEngine.h"
+#include "PartyBridge.h"
 
 bool PythonEngine::Schedule(API::Object callback)
 {
@@ -16,6 +17,7 @@ bool PythonEngine::Schedule(API::Object callback)
 
 void PythonEngine::RunScheduledCallbacks()
 {
+    PyEng::Party::ContextScope partyScope;
     if (!IsEnabled() || IsReloading() || !IsWorldThread()) return;
     GILGuard gil;
     CallbackList callbacks;

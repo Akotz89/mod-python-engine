@@ -1,4 +1,5 @@
 #include "PythonEngine.h"
+#include "PartyBridge.h"
 #include "PythonOutput.h"
 #include "HookRegistry.h"
 #include "PopulationBridge.h"
@@ -201,6 +202,7 @@ void PythonEngine::Initialize()
 
 void PythonEngine::Shutdown()
 {
+    PyEng::Party::InvalidateContexts();
     if (!Py_IsInitialized())
         return;
 
@@ -263,6 +265,8 @@ bool PythonEngine::LoadScripts()
         bool owns;
         ~ReloadGuard() { if (owns) engine.EndReload(); }
     } reloadGuard{*this, BeginReload()};
+    if (!reloadGuard.owns)
+        return false;
     uint32 oldMSTime = getMSTime();
 
     LOG_INFO("module.python", "Loading Python scripts...");
@@ -277,9 +281,10 @@ bool PythonEngine::LoadScripts()
         return false;
     }
 
+    bool const populationEnabled = sConfigMgr->GetOption<bool>("Python.Population.Enabled", false);
     fs::path populationEntry;
     bool hasPopulationEntry = false;
-    if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
+    if (populationEnabled)
     {
         populationEntry = fs::path(sConfigMgr->GetOption<std::string>("Python.Population.EntryScript", ""));
         hasPopulationEntry = !populationEntry.empty();
@@ -311,6 +316,7 @@ bool PythonEngine::LoadScripts()
     CallbackList candidateScheduledCallbacks;
     API::Object candidateNamespace;
     API::Object candidatePopulationCallback;
+    API::Object candidateCommit;
     int count = 0;
     try
     {
@@ -405,8 +411,28 @@ del _engine_refresh_sources
 
             try
             {
+                bool const isPopulationEntry = hasPopulationEntry &&
+                    scriptFile == (canonicalRoot / populationEntry).lexically_normal();
+                if (isPopulationEntry)
+                {
+                    namespaceDictionary.attr("pop")("__previous_population_namespace__", API::Object());
+                    namespaceDictionary.attr("pop")("__commit_reload__", API::Object());
+                    if (populationHealthy.load(std::memory_order_acquire))
+                        namespaceDictionary["__previous_population_namespace__"] = main_namespace;
+                }
                 candidateNamespace["__file__"] = scriptFile.string();
                 API::ExecFile(scriptFile.string(), candidateNamespace, candidateNamespace);
+                if (isPopulationEntry)
+                {
+                    // Capture only this entry's transaction; later scripts cannot replace it.
+                    namespaceDictionary.attr("pop")("__previous_population_namespace__", API::Object());
+                    if (namespaceDictionary.has_key("__commit_reload__"))
+                    {
+                        candidateCommit = namespaceDictionary.attr("pop")("__commit_reload__");
+                        if (!API::IsCallable(candidateCommit))
+                            throw std::runtime_error("__commit_reload__ must be callable");
+                    }
+                }
                 count++;
             }
             catch (...)
@@ -427,7 +453,7 @@ del _engine_refresh_sources
         candidateScheduledTarget = nullptr;
         candidateSafeEventRegistrationTarget = nullptr;
 
-        if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
+        if (populationEnabled)
         {
             API::Dict namespaceDictionary = boost::python::extract<API::Dict>(candidateNamespace);
             if (namespaceDictionary.has_key("population_tick"))
@@ -442,20 +468,37 @@ del _engine_refresh_sources
             }
         }
 
+        namespaceDictionary.attr("pop")("__previous_population_namespace__", API::Object());
+        namespaceDictionary.attr("pop")("__commit_reload__", API::Object());
+        bool const candidatePopulationHealthy = API::IsCallable(candidatePopulationCallback);
+        std::string const publishedRoot = canonicalRoot.string();
         std::unique_lock<std::shared_mutex> lock(hookMutex);
-        hookMap.swap(candidateHookMap);
-        scheduledCallbacks.swap(candidateScheduledCallbacks);
-        safeEventMap.swap(candidateSafeEventMap);
-        std::swap(main_namespace, candidateNamespace);
-        if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
+        if (!API::IsNone(candidateCommit))
+            candidateCommit();
+        // These swaps/atomic stores only transfer ownership; no Python callbacks/config reads.
+        auto publishCandidate = [&]() noexcept
         {
-            std::swap(populationCallback, candidatePopulationCallback);
-            populationHealthy.store(API::IsCallable(populationCallback), std::memory_order_release);
+            hookMap.swap(candidateHookMap);
+            scheduledCallbacks.swap(candidateScheduledCallbacks);
+            safeEventMap.swap(candidateSafeEventMap);
+            std::swap(main_namespace, candidateNamespace);
+            if (populationEnabled)
+            {
+                std::swap(populationCallback, candidatePopulationCallback);
+                populationHealthy.store(candidatePopulationHealthy, std::memory_order_release);
+            }
+            safeEventsHealthy.store(true, std::memory_order_release);
+            PyEng::Party::InvalidateContexts();
+            published = true;
+        };
+        publishCandidate();
+        // Diagnostics cannot turn an already committed publication into a rejection.
+        try
+        {
+            LOG_INFO("module.python", ">> Published {} Python scripts from canonical root '{}' in {} ms.", count,
+                     publishedRoot, GetMSTimeDiffToNow(oldMSTime));
         }
-        safeEventsHealthy.store(true, std::memory_order_release);
-        published = true;
-        LOG_INFO("module.python", ">> Published {} Python scripts from canonical root '{}' in {} ms.", count,
-                 canonicalRoot.string(), GetMSTimeDiffToNow(oldMSTime));
+        catch (...) { }
         return true;
     }
     catch (...)
