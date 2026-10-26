@@ -13,6 +13,7 @@
 #include <locale>
 #include <unordered_set>
 #include <set>
+#include <tuple>
 
 using namespace PyEng::Population;
 
@@ -727,6 +728,153 @@ boost::python::dict ReadAcquisitionCatalog()
     return result;
 }
 
+uint32 LoadedSourceKeyInteger(boost::python::object const& value)
+{
+    if (!PyLong_Check(value.ptr()) || PyBool_Check(value.ptr()))
+        throw std::runtime_error("loaded source natural key fields must be uint32 integers");
+    unsigned long long const parsed = PyLong_AsUnsignedLongLong(value.ptr());
+    if (PyErr_Occurred())
+    {
+        PyErr_Clear();
+        throw std::runtime_error("loaded source natural key integer out of range");
+    }
+    if (parsed > std::numeric_limits<uint32>::max())
+        throw std::runtime_error("loaded source natural key integer out of range");
+    return static_cast<uint32>(parsed);
+}
+
+boost::python::dict ReadLoadedSourceSnapshot(boost::python::list const& input)
+{
+    if (!sPythonEngine->IsNativeCapabilityCallAllowed() || sPythonEngine->IsReloading())
+        throw std::runtime_error("loaded source snapshot requires the enabled native world thread outside reload");
+    Py_ssize_t const count = boost::python::len(input);
+    if (count < 1 || count > 64)
+        throw std::runtime_error("loaded source snapshot request must contain 1..64 natural keys");
+
+    std::vector<LoadedSourceNaturalKey> keys;
+    std::set<std::tuple<std::string, uint32, uint32, uint32>> uniqueKeys;
+    keys.reserve(static_cast<std::size_t>(count));
+    for (Py_ssize_t index = 0; index < count; ++index)
+    {
+        auto const request = ExactPredicateObject(input[index], {"source_table", "natural_key"});
+        LoadedSourceNaturalKey key;
+        key.sourceTable = PredicateString(request["source_table"]);
+        if (key.sourceTable.size() > 64)
+            throw std::runtime_error("loaded source table name exceeds its bound");
+        auto const natural = ExactPredicateObject(request["natural_key"], {"entry", "slot", "item"});
+        key.entry = LoadedSourceKeyInteger(natural["entry"]);
+        key.slot = LoadedSourceKeyInteger(natural["slot"]);
+        key.item = LoadedSourceKeyInteger(natural["item"]);
+        if (!uniqueKeys.emplace(key.sourceTable, key.entry, key.slot, key.item).second)
+            throw std::runtime_error("loaded source natural key duplicated");
+        keys.push_back(std::move(key));
+    }
+
+    Bridge* provider = GetBridge();
+    if (!provider)
+        throw std::runtime_error("the required population provider is not registered");
+    LoadedSourceSnapshot value = provider->ReadLoadedSourceSnapshot(keys);
+    if (value.valid && value.rows.size() != keys.size())
+        throw std::runtime_error("loaded source provider returned an incomplete copy-out");
+
+    boost::python::dict result, phase, coverage;
+    result["schema"] = "cpi211-loaded-item-sources-v1";
+    result["valid"] = value.valid; result["reason"] = value.reason;
+    result["source_snapshot_id"] = value.sourceSnapshotId;
+    result["identity_basis"] = "sha256_exact_copied_loaded_rows";
+    result["process_incarnation"] = value.processIncarnation;
+    result["process_incarnation_source"] = "native_provider_pid_and_construction_monotonic_ns";
+    result["provider_constructed_monotonic_ns"] = value.providerConstructedMonotonicNs;
+    result["capture_epoch_monotonic_ns"] = value.captureMonotonicNs;
+    result["copy_out_completed_monotonic_ns"] = value.copyOutCompletedMonotonicNs;
+    result["copy_out_duration_ns"] = value.copyOutDurationNs;
+    result["reload_generation_available"] = value.reloadGenerationAvailable;
+    result["reload_generation"] = boost::python::object();
+    result["actor_eligibility_evaluated"] = false;
+    result["resources_evaluated"] = false;
+    result["action_authority"] = false;
+    result["quote_bound"] = false;
+    phase["enabled"] = value.phase.enabled; phase["policy_valid"] = value.phase.policyValid;
+    phase["phase_id"] = value.phase.phaseId; phase["level_ceiling"] = value.phase.levelCeiling;
+    phase["policy_digest"] = value.phase.policyDigest; result["phase"] = phase;
+
+    boost::python::list rows, supportedFamilies, unknownReasons;
+    std::set<std::string> familySet, reasonSet;
+    std::size_t evaluatedCount = 0, matchedCount = 0;
+    for (LoadedVendorSourceObservation const& rowValue : value.rows)
+    {
+        boost::python::dict row, natural, semantics, item, metrics;
+        natural["entry"] = rowValue.entry; natural["slot"] = rowValue.slot; natural["item"] = rowValue.item;
+        row["family"] = rowValue.family; row["source_table"] = rowValue.sourceTable;
+        row["natural_key"] = natural; row["stable_join_key"] = rowValue.stableJoinKey;
+        row["lookup_evaluated"] = rowValue.lookupEvaluated;
+        row["matched"] = rowValue.matched; row["reason"] = rowValue.reason;
+        if (rowValue.lookupEvaluated) ++evaluatedCount;
+        if (rowValue.matched)
+        {
+            ++matchedCount;
+            semantics["maxcount"] = rowValue.maxCount; semantics["incrtime"] = rowValue.incrementTime;
+            semantics["ExtendedCost"] = rowValue.extendedCost;
+        }
+        else
+        {
+            semantics["maxcount"] = boost::python::object(); semantics["incrtime"] = boost::python::object();
+            semantics["ExtendedCost"] = boost::python::object();
+        }
+        item["known"] = rowValue.itemTemplateKnown;
+        if (rowValue.itemTemplateKnown)
+        {
+            item["buy_price"] = rowValue.buyPrice; item["buy_count"] = rowValue.buyCount;
+            item["required_level"] = rowValue.itemRequiredLevel; item["allowable_class"] = rowValue.allowableClass;
+            item["allowable_race"] = rowValue.allowableRace; item["required_skill"] = rowValue.requiredSkill;
+            item["required_skill_rank"] = rowValue.requiredSkillRank;
+        }
+        else
+        {
+            item["buy_price"] = boost::python::object(); item["buy_count"] = boost::python::object();
+            item["required_level"] = boost::python::object(); item["allowable_class"] = boost::python::object();
+            item["allowable_race"] = boost::python::object(); item["required_skill"] = boost::python::object();
+            item["required_skill_rank"] = boost::python::object();
+        }
+        semantics["item_template"] = item;
+        semantics["condition_state"] = "unknown_actor_specific_truth_preserved_by_vendor_quote_path";
+        row["native_semantics"] = semantics;
+        boost::python::list unknownSemantics;
+        for (std::string const& field : rowValue.unknownSemantics)
+        {
+            unknownSemantics.append(field);
+            reasonSet.insert("semantic_unknown:" + field);
+        }
+        row["unknown_semantics"] = unknownSemantics;
+        if (!rowValue.reason.empty()) reasonSet.insert(rowValue.reason);
+        if (rowValue.family != "unknown") familySet.insert(rowValue.family);
+        for (std::string const& field : rowValue.unknownMetrics)
+        {
+            boost::python::dict metric;
+            metric["state"] = "unknown"; metric["value"] = boost::python::object();
+            metric["reason"] = "static native source rows do not measure actor acquisition outcomes";
+            metrics[field] = metric;
+            reasonSet.insert("metric_unknown:" + field);
+        }
+        row["metrics"] = metrics;
+        rows.append(row);
+    }
+    result["rows"] = rows;
+    for (std::string const& family : familySet) supportedFamilies.append(family);
+    coverage["requested_rows"] = keys.size(); coverage["evaluated_rows"] = evaluatedCount;
+    coverage["matched_rows"] = matchedCount; coverage["unmatched_rows"] = evaluatedCount - matchedCount;
+    coverage["not_evaluated_rows"] = keys.size() - evaluatedCount;
+    coverage["supported_families"] = supportedFamilies;
+    coverage["unobserved_family_coverage"] = "unknown";
+    coverage["all_fourteen_family_parity"] = false;
+    result["coverage"] = coverage;
+    if (!value.valid && !value.reason.empty()) reasonSet.insert(value.reason);
+    reasonSet.insert("only_native_vendor_source_rows_are_supported_by_this_snapshot");
+    for (std::string const& reason : reasonSet) unknownReasons.append(reason);
+    result["unknown_reasons"] = unknownReasons;
+    return result;
+}
+
 boost::python::dict ReadGearResources(std::string const& identityKey,
     boost::python::list const& skillIds, boost::python::list const& itemIds,
     boost::python::list const& questIds)
@@ -968,6 +1116,7 @@ void export_population_api()
     boost::python::def("strategic_ack_quest_acquisition_records", AcknowledgeQuestAcquisition,
         (boost::python::arg("identity_key"), boost::python::arg("acknowledgements")));
     boost::python::def("strategic_read_acquisition_catalog", ReadAcquisitionCatalog);
+    boost::python::def("strategic_read_loaded_source_snapshot", ReadLoadedSourceSnapshot);
     boost::python::def("strategic_read_vendor_offers", ReadVendorOffers);
     boost::python::def("strategic_buy_vendor_item", BuyVendorItem);
     boost::python::def("strategic_read_quest_snapshot", ReadQuestSnapshot,

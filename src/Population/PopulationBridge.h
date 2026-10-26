@@ -4,6 +4,7 @@
 #include "Define.h"
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace PyEng::Population
@@ -404,6 +405,37 @@ struct AcquisitionCatalog
     bool playerHookRegistryInitialized{false};
 };
 
+// A caller supplies only a source table and its complete natural key. Native
+// code resolves that key against the currently loaded source store and copies
+// values out; it never accepts sealed ordinals or digests from the caller.
+struct LoadedSourceNaturalKey
+{
+    std::string sourceTable;
+    uint32 entry{0}, slot{0}, item{0};
+};
+struct LoadedVendorSourceObservation
+{
+    std::string family{"vendor"}, sourceTable{"npc_vendor"}, stableJoinKey, reason;
+    uint32 entry{0}, slot{0}, item{0};
+    bool lookupEvaluated{false}, matched{false}, itemTemplateKnown{false};
+    uint32 maxCount{0}, incrementTime{0}, extendedCost{0};
+    uint32 buyPrice{0}, buyCount{0}, itemRequiredLevel{0}, allowableClass{0}, allowableRace{0};
+    uint32 requiredSkill{0}, requiredSkillRank{0};
+    // Current Core1 vendor projection fields unavailable from these loaded
+    // native rows, and all five metric classes, remain explicit unknowns.
+    std::vector<std::string> unknownSemantics;
+    std::vector<std::string> unknownMetrics;
+};
+struct LoadedSourceSnapshot
+{
+    bool valid{false};
+    std::string reason, sourceSnapshotId, processIncarnation;
+    uint64 providerConstructedMonotonicNs{0}, captureMonotonicNs{0}, copyOutCompletedMonotonicNs{0}, copyOutDurationNs{0};
+    bool reloadGenerationAvailable{false};
+    PhaseSnapshot phase;
+    std::vector<LoadedVendorSourceObservation> rows;
+};
+
 struct SourcePredicateDefinition
 {
     uint32 type{0}; int64 values[3]{0, 0, 0};
@@ -496,6 +528,21 @@ public:
     {
         AcquisitionCatalog result;
         result.reason = "unsupported";
+        return result;
+    }
+    virtual LoadedSourceSnapshot ReadLoadedSourceSnapshot(
+        std::vector<LoadedSourceNaturalKey> const& keys)
+    {
+        LoadedSourceSnapshot result;
+        result.reason = "unsupported";
+        result.rows.reserve(keys.size());
+        for (LoadedSourceNaturalKey const& key : keys)
+        {
+            LoadedVendorSourceObservation row;
+            row.sourceTable = key.sourceTable; row.entry = key.entry; row.slot = key.slot; row.item = key.item;
+            row.family = key.sourceTable == "npc_vendor" ? "vendor" : "unknown";
+            row.reason = "unsupported"; result.rows.push_back(std::move(row));
+        }
         return result;
     }
     virtual std::vector<GearVendorOffer> ReadVendorOffers(std::string const&, std::vector<uint32> const&) { return {}; }
