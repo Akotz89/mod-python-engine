@@ -126,6 +126,7 @@ boost::python::dict ReadGearSnapshot(std::string const& identityKey, uint32 obse
     result["spec_tab"] = value.specTab;
     result["session_incarnation"] = value.sessionIncarnation;
     result["strategic_generation"] = value.strategicGeneration;
+    result["goal_revision"] = value.goalRevision;
     result["role"] = value.role;
     result["map_id"] = value.mapId;
     result["instance_id"] = value.instanceId;
@@ -202,6 +203,8 @@ boost::python::list ReadVendorOffers(std::string const& identityKey, boost::pyth
         row["request_id"] = value.requestId; row["source_id"] = value.sourceId;
         row["vendor_guid"] = value.vendorGuid; row["vendor_entry"] = value.vendorEntry;
         row["vendor_slot"] = value.vendorSlot; row["price_copper"] = value.priceCopper;
+        row["source_slot_known"] = value.sourceSlotKnown;
+        row["source_slot"] = value.sourceSlotKnown ? boost::python::object(value.sourceSlot) : boost::python::object();
         row["stock"] = value.stock; row["money_copper"] = value.moneyCopper;
         row["reason"] = value.reason; row["reward"] = GearRewardResult(value.reward);
         result.append(row);
@@ -743,6 +746,21 @@ uint32 LoadedSourceKeyInteger(boost::python::object const& value)
     return static_cast<uint32>(parsed);
 }
 
+int32 LoadedSourceItemInteger(boost::python::object const& value)
+{
+    if (!PyLong_Check(value.ptr()) || PyBool_Check(value.ptr()))
+        throw std::runtime_error("loaded source item key must be a signed 32-bit integer");
+    long long const parsed = PyLong_AsLongLong(value.ptr());
+    if (PyErr_Occurred())
+    {
+        PyErr_Clear();
+        throw std::runtime_error("loaded source item key integer out of range");
+    }
+    if (parsed < std::numeric_limits<int32>::min() || parsed > std::numeric_limits<int32>::max())
+        throw std::runtime_error("loaded source item key integer out of range");
+    return static_cast<int32>(parsed);
+}
+
 boost::python::dict ReadLoadedSourceSnapshot(boost::python::list const& input)
 {
     if (!sPythonEngine->IsNativeCapabilityCallAllowed() || sPythonEngine->IsReloading())
@@ -752,7 +770,7 @@ boost::python::dict ReadLoadedSourceSnapshot(boost::python::list const& input)
         throw std::runtime_error("loaded source snapshot request must contain 1..64 natural keys");
 
     std::vector<LoadedSourceNaturalKey> keys;
-    std::set<std::tuple<std::string, uint32, uint32, uint32>> uniqueKeys;
+    std::set<std::tuple<std::string, uint32, uint32, int32>> uniqueKeys;
     keys.reserve(static_cast<std::size_t>(count));
     for (Py_ssize_t index = 0; index < count; ++index)
     {
@@ -764,7 +782,7 @@ boost::python::dict ReadLoadedSourceSnapshot(boost::python::list const& input)
         auto const natural = ExactPredicateObject(request["natural_key"], {"entry", "slot", "item"});
         key.entry = LoadedSourceKeyInteger(natural["entry"]);
         key.slot = LoadedSourceKeyInteger(natural["slot"]);
-        key.item = LoadedSourceKeyInteger(natural["item"]);
+        key.item = LoadedSourceItemInteger(natural["item"]);
         if (!uniqueKeys.emplace(key.sourceTable, key.entry, key.slot, key.item).second)
             throw std::runtime_error("loaded source natural key duplicated");
         keys.push_back(std::move(key));

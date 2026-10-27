@@ -156,7 +156,7 @@ struct GearQuest
 
 struct GearSnapshot
 {
-    uint64 sessionIncarnation{0}, strategicGeneration{0};
+    uint64 sessionIncarnation{0}, strategicGeneration{0}, goalRevision{0};
     std::string identityKey;
     uint32 accountId{0};
     uint32 characterGuid{0};
@@ -200,7 +200,10 @@ struct GearVendorOffer
 {
     std::string requestId, sourceId, reason, phaseDigest, witnessId;
     uint64 vendorGuid{0}, session{0}, generation{0}, goalRevision{0};
-    uint32 vendorEntry{0}, vendorSlot{0}, priceCopper{0}, stock{0}, moneyCopper{0};
+    // vendorSlot is the compacted loaded-list index used by the dynamic quote;
+    // sourceSlot is the original npc_vendor DB slot and is never an index.
+    uint32 vendorEntry{0}, vendorSlot{0}, sourceSlot{0}, priceCopper{0}, stock{0}, moneyCopper{0};
+    bool sourceSlotKnown{false};
     uint32 accountId{0}, characterGuid{0}, maxCount{0}, incrTime{0};
     uint64 vendorListToken{0}, itemTemplateToken{0};
     uint8 level{0}, classId{0};
@@ -411,12 +414,14 @@ struct AcquisitionCatalog
 struct LoadedSourceNaturalKey
 {
     std::string sourceTable;
-    uint32 entry{0}, slot{0}, item{0};
+    uint32 entry{0}, slot{0};
+    int32 item{0}; // npc_vendor stores negative reference rows in this signed column
 };
 struct LoadedVendorSourceObservation
 {
     std::string family{"vendor"}, sourceTable{"npc_vendor"}, stableJoinKey, reason;
-    uint32 entry{0}, slot{0}, item{0};
+    uint32 entry{0}, slot{0};
+    int32 item{0};
     bool lookupEvaluated{false}, matched{false}, itemTemplateKnown{false};
     uint32 maxCount{0}, incrementTime{0}, extendedCost{0};
     uint32 buyPrice{0}, buyCount{0}, itemRequiredLevel{0}, allowableClass{0}, allowableRace{0};

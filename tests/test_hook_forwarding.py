@@ -5,7 +5,10 @@ import sys
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-CORE = ROOT.parent.parent / 'src/server/game/Scripting/ScriptDefines'
+SOURCE = ROOT.parent.parent
+if not (SOURCE / 'src/server/game').is_dir():
+    SOURCE = ROOT.parent / 'azerothcore-wotlk'
+CORE = SOURCE / 'src/server/game/Scripting/ScriptDefines'
 sys.path.insert(0, str(ROOT / 'tools'))
 from generate_hook_inventory import collect_inventory
 
@@ -40,6 +43,102 @@ class NativeForwardingTests(unittest.TestCase):
                 self.assertIn(f'virtual bool {hook}(', declarations)
                 self.assertIn(f'script->{hook}(', dispatch)
             self.assertIn('GetScriptById(', dispatch)
+
+    def test_global_handled_hooks_keep_fallback_and_cast_permission_is_and(self):
+        cases = (
+            ('CreatureScript.cpp', 'bool ScriptMgr::OnQuestSelect(Player* player, Creature* creature', 'OnCreatureQuestSelect'),
+            ('CreatureScript.cpp', 'bool ScriptMgr::OnQuestComplete(Player* player, Creature* creature', 'OnCreatureQuestComplete'),
+            ('CreatureScript.cpp', 'bool ScriptMgr::OnQuestReward(Player* player, Creature* creature', 'OnCreatureQuestReward'),
+            ('GameObjectScript.cpp', 'bool ScriptMgr::OnQuestReward(Player* player, GameObject* go', 'OnGameObjectQuestReward'),
+            ('AllItemScript.cpp', 'bool ScriptMgr::OnQuestAccept(Player* player, Item* item', 'OnItemQuestAccept'),
+            ('AllItemScript.cpp', 'bool ScriptMgr::OnItemExpire(Player* player', 'OnItemExpire'),
+            ('AllItemScript.cpp', 'bool ScriptMgr::OnItemRemove(Player* player', 'OnItemRemove'),
+        )
+        for dispatcher, signature, hook in cases:
+            text = (CORE / dispatcher).read_text()
+            body = self._function_body(text, signature)
+            self.assertIn(f'script->{hook}(', body)
+            handled = re.search(r'if \((?:ret|handled) && \*(?:ret|handled)\)\s*return true;', body)
+            self.assertIsNotNone(handled, hook)
+            fallback = body.find('GetScriptById(')
+            self.assertGreaterEqual(fallback, 0, hook)
+            self.assertLess(body.index(f'script->{hook}('), handled.start(), hook)
+            self.assertLess(handled.end(), fallback, hook)
+            self.assertIn('return tempScript ?', body[fallback:], hook)
+
+        for header, hooks in (
+            ('AllCreatureScript.h', ('OnCreatureQuestSelect', 'OnCreatureQuestComplete', 'OnCreatureQuestReward')),
+            ('AllGameObjectScript.h', ('OnGameObjectQuestReward',)),
+            ('AllItemScript.h', ('OnItemQuestAccept', 'OnItemExpire', 'OnItemRemove')),
+        ):
+            declarations = (CORE / header).read_text()
+            for hook in hooks:
+                declaration = re.search(rf'virtual bool {hook}\([^;]+\{{ return false; \}}', declarations)
+                self.assertIsNotNone(declaration, hook)
+
+        item_dispatch = (CORE / 'AllItemScript.cpp').read_text()
+        cast_body = self._function_body(item_dispatch, 'bool ScriptMgr::OnCastItemCombatSpell(')
+        self.assertIn('bool canCast = true;', cast_body)
+        self.assertIn('ExecuteScript<AllItemScript>', cast_body)
+        self.assertIn('script->CanItemCastCombatSpell(', cast_body)
+        self.assertIn('canCast = script->CanItemCastCombatSpell(player, victim, spellInfo, item) && canCast;', cast_body)
+        self.assertLess(cast_body.index('if (!canCast)'), cast_body.index('GetScriptById('))
+        self.assertIn('return tempScript ? tempScript->OnCastItemCombatSpell', cast_body)
+        self.assertRegex((CORE / 'AllItemScript.h').read_text(),
+                         r'virtual bool CanItemCastCombatSpell\([^;]+\{ return true; \}')
+
+    def test_quest_lifecycle_callers_follow_validation_and_preserve_chicken_reset(self):
+        handler = (SOURCE / 'src/server/game/Handlers/QuestHandler.cpp').read_text()
+        select = self._function_body(handler, 'void WorldSession::HandleQuestgiverQueryQuestOpcode(')
+        self.assertLess(select.index('if (!_player->CanTakeQuest(quest, true))'),
+                        select.index('sScriptMgr->OnQuestSelect('))
+        self.assertLess(select.index('if (!_player->CanInteractWithQuestGiver(object))'),
+                        select.index('sScriptMgr->OnQuestSelect('))
+        self.assertLess(select.index('sScriptMgr->OnQuestSelect('),
+                        select.index('if (quest->IsAutoAccept()'))
+        self.assertLess(select.index('sScriptMgr->OnQuestSelect('),
+                        select.index('SendQuestGiverQuestDetails('))
+
+        complete = self._function_body(handler, 'void WorldSession::HandleQuestgiverCompleteQuest(')
+        for validation in ('!object || !object->hasInvolvedQuest(questId)',
+                           '!_player->CanInteractWithQuestGiver(object)',
+                           '!_player->CanSeeStartQuest(quest)'):
+            self.assertLess(complete.index(validation), complete.index('sScriptMgr->OnQuestComplete('))
+        self.assertLess(complete.index('sScriptMgr->OnQuestComplete('),
+                        complete.index('SendQuestGiverRequestItems('))
+        self.assertLess(complete.index('sScriptMgr->OnQuestComplete('),
+                        complete.index('SendQuestGiverOfferReward('))
+
+        reward = self._function_body(handler, 'void WorldSession::HandleQuestgiverChooseRewardOpcode(')
+        for validation in ('!object || !object->hasInvolvedQuest(questId)',
+                           '!_player->CanInteractWithQuestGiver(object)',
+                           '_player->CanRewardQuest(quest, reward, true)'):
+            self.assertLess(reward.index(validation), reward.index('_player->RewardQuest('))
+        self.assertLess(reward.index('_player->RewardQuest('), reward.index('sScriptMgr->OnQuestReward('))
+
+        special = (SOURCE / 'src/server/scripts/World/npcs_special.cpp').read_text()
+        chicken_class = special[special.index('class npc_chicken_cluck :'):
+                                special.index('/*######\n## npc_dancing_flames')]
+        self.assertNotIn('OnQuestComplete(', chicken_class)
+        reward = self._function_body(chicken_class,
+            'bool OnQuestReward(Player* /*player*/, Creature* creature, Quest const* quest, uint32 /*opt*/)')
+        self.assertIn('quest->GetQuestId() == QUEST_CLUCK', reward)
+        self.assertIn('->Reset();', reward)
+        self.assertRegex(reward, r'return false;\s*}$')
+
+    @staticmethod
+    def _function_body(text, signature):
+        start = text.index(signature)
+        opening = text.index('{', start)
+        depth = 0
+        for index in range(opening, len(text)):
+            if text[index] == '{':
+                depth += 1
+            elif text[index] == '}':
+                depth -= 1
+                if depth == 0:
+                    return text[start:index + 1]
+        raise AssertionError(f'unterminated function: {signature}')
 
     def test_heal_damage_and_periodic_damage_are_live_mutable_references(self):
         text = (ROOT / 'src/Scripts/UnitScript.cpp').read_text()
