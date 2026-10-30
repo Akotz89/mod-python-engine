@@ -2,7 +2,7 @@
 #define MOD_PYTHON_ENGINE_HOOK_REGISTRY_H
 
 #include "HookInfo.h"
-#include "GeneratedHookPolicy.h"
+#include "GeneratedHookInventory.h"
 #include <optional>
 #include <string>
 #include <string_view>
@@ -32,7 +32,7 @@ namespace PyEng::Hooks
      *
      * @param name String identifier for the hook (ex., "PLAYER_ON_LOGIN")
      * @param info Hook identifier structure
-     * @return True only when generated evidence proves the hook is forwarded
+     * @return True only when the declaration matches generated source inventory
      */
     inline bool RegisterHookInternal(char const* name, HookInfo info)
     {

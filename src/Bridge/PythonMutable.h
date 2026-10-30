@@ -2,7 +2,11 @@
 #define MOD_PYTHON_ENGINE_MUTABLE_H
 
 #include "Define.h"
+#include "SharedDefines.h"
+#include "PythonBorrowed.h"
 #include <string>
+#include <cmath>
+#include <type_traits>
 
 namespace PyEng::Bridge
 {
@@ -16,33 +20,74 @@ namespace PyEng::Bridge
     class Mutable
     {
     public:
-        explicit Mutable(T& ref) : m_ref(ref) {}
+        explicit Mutable(T& ref) : state(std::make_shared<State>(State{ref, currentCallbackLease, {}}))
+        {
+            CheckLease(state->lease);
+            state->lease->commits.emplace_back([value = state, &ref] { ref = std::move(value->value); });
+        }
 
-        Mutable(Mutable const&) = default;
-        Mutable& operator=(Mutable const&) = delete;
+        template<typename Enum>
+        static Mutable ForEnum(Enum& ref)
+        {
+            Mutable value(static_cast<T>(ref), 0);
+            if constexpr (std::is_same_v<Enum, Powers>)
+                value.state->validate = [](T replacement)
+                {
+                    if (static_cast<uint64>(replacement) >= MAX_POWERS)
+                        RejectValue("power must name a native power slot");
+                };
+            else if constexpr (std::is_same_v<Enum, ServerSideVisibilityType>)
+                value.state->validate = [](T replacement)
+                {
+                    if (static_cast<uint64>(replacement) >= TOTAL_SERVERSIDE_VISIBILITY_TYPES)
+                        RejectValue("visibility type must name a native visibility slot");
+                };
+            value.state->lease->commits.emplace_back([state = value.state, &ref]
+            {
+                ref = static_cast<Enum>(state->value);
+            });
+            return value;
+        }
 
-        /**
-         * @brief Get current value of the referenced variable
-         */
-        T get() const { return m_ref; }
-
-        /**
-         * @brief Set new value to the referenced variable
-         */
-        void set(T value) { m_ref = value; }
-
-        /**
-         * @brief Implicit conversion for convenience
-         */
-        operator T() const { return m_ref; }
-
-        /**
-         * @brief String representation for Python __repr__
-         */
-        std::string repr() const { return "<Mutable: " + std::to_string(static_cast<int64>(m_ref)) + ">"; }
+        T get() const { CheckLease(state->lease); return state->value; }
+        void set(T value)
+        {
+            CheckLease(state->lease);
+            if constexpr (std::is_floating_point_v<T>)
+                if (!std::isfinite(value))
+                    RejectValue("native floating values must be finite");
+            if (state->validate)
+                state->validate(value);
+            state->value = value;
+        }
+        operator T() const { return get(); }
+        std::string repr() const
+        {
+            if constexpr (std::is_same_v<T, std::string>)
+                return "<Mutable: " + get() + ">";
+            else
+                return "<Mutable: " + std::to_string(get()) + ">";
+        }
 
     private:
-        T& m_ref;
+        static void RejectValue(char const* message)
+        {
+            PyErr_SetString(PyExc_ValueError, message);
+            boost::python::throw_error_already_set();
+        }
+
+        Mutable(T value, int) : state(std::make_shared<State>(State{value, currentCallbackLease, {}}))
+        {
+            CheckLease(state->lease);
+        }
+
+        struct State
+        {
+            T value;
+            std::shared_ptr<CallbackLease> lease;
+            std::function<void(T)> validate;
+        };
+        std::shared_ptr<State> state;
     };
 
     // Type aliases for common primitives

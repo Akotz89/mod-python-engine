@@ -13,12 +13,24 @@ Python.Enabled = 1
 
 #
 #    Python.ScriptsPath
-#        Description: Defines the location of the script folder used for loading scripts.
-#                     Scripts path can be relative or absolute.
-#        Default:     "python_scripts"
+#        Description: Absolute script directory without symlinks or parent traversal.
+#                     Regular .py files load recursively in deterministic lexical order.
+#                     Set this before enabling Python scripts; migrate any relative
+#                     setting to its intended absolute directory before upgrading.
+#                     An empty or invalid path rejects loading and logs an error.
+#        Default:     "" (script loading fails until configured)
 #
 
-Python.ScriptsPath = "python_scripts"
+Python.ScriptsPath = ""
+
+# Optional population consumer. It is independent of general hooks and native bindings.
+Python.Population.Enabled = 0
+Python.Population.EntryScript = ""
+Python.Population.MaxTickMilliseconds = 25
+Python.Population.NativeOnlineLimit = 0
+
+# Existing typed event callbacks retain their provider-specific watchdog.
+Python.SafeEvent.MaxMilliseconds = 25
 
 ###################################################################################################
 # LOGGING SETTINGS

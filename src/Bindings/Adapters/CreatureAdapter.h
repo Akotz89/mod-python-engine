@@ -10,6 +10,12 @@ namespace PyEng::CreatureAdapter
         return creature ? creature->GetGUID().GetCounter() : 0;
     }
 
+    inline void Despawn(Creature* creature, uint32 delayMs = 0, uint32 respawnSeconds = 0)
+    {
+        if (creature)
+            creature->DespawnOrUnsummon(Milliseconds(delayMs), Seconds(respawnSeconds));
+    }
+
     inline void Respawn(Creature* creature)
     {
         if (creature)
