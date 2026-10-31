@@ -1,7 +1,8 @@
 #include "AutoRegistryMgr.h"
-#include "Population/PopulationBridge.h"
+#include "PopulationBridge.h"
 #include "PythonEngine.h"
 #include "ScriptMgr.h"
+#include "Config.h"
 
 // Create Scripts scope for the forwards
 CREATE_REGISTRY_SCOPE(Scripts);
@@ -14,6 +15,13 @@ REGISTER_TO_SCOPE(Scripts, AddSC_PythonGameObjectScripts);
 REGISTER_TO_SCOPE(Scripts, AddSC_PythonItemScripts);
 REGISTER_TO_SCOPE(Scripts, AddSC_PythonPlayerScripts);
 REGISTER_TO_SCOPE(Scripts, AddSC_PythonUnitScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonAchievementScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonArenaScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonArenaTeamScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonMapScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonServerScripts);
+REGISTER_TO_SCOPE(Scripts, AddSC_PythonWorldScripts);
+
 
 class PythonLoader : public WorldScript
 {
@@ -45,16 +53,12 @@ public:
 
     void OnUpdate(uint32 diff) override
     {
-        if (sPythonEngine->IsPopulationProfile())
-            (void)sPythonEngine->RunPopulationTick(diff);
+        sPythonEngine->RunScheduledCallbacks();
+        if (sConfigMgr->GetOption<bool>("Python.Population.Enabled", false))
+            sPythonEngine->RunPopulationTick(diff);
     }
 
-    void OnAfterUnloadAllMaps() override
-    {
-        // Ensure the Python engine is turned off safely, preventing memory
-        // leaks or hanging processes
-        sPythonEngine->Shutdown();
-    }
+
 };
 
 void Addmod_python_engineScripts()

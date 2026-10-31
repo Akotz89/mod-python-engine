@@ -9,6 +9,7 @@
 #include "Defines/CreatureHook.h"
 #include "Defines/GameObjectHook.h"
 #include "Defines/ItemHook.h"
+#include "Defines/MapHook.h"
 #include "Defines/PlayerHook.h"
 #include "Defines/ServerHook.h"
 #include "Defines/UnitHook.h"

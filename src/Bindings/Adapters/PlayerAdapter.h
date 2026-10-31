@@ -3,6 +3,7 @@
 
 #include "Player.h"
 #include "Chat.h"
+#include "PythonBorrowed.h"
 
 /**
  * @brief Adapter namespace providing simplified Player API wrappers
@@ -90,7 +91,12 @@ namespace PyEng::PlayerAdapter
     inline void DestroyItem(Player* player, uint8 bag, uint8 slot)
     {
         if (player)
+        {
+            auto item = player->GetItemByPos(bag, slot);
+            if (item)
+                PyEng::Bridge::InvalidateBorrowedPointer(item);
             player->DestroyItem(bag, slot, true);
+        }
     }
 
     // Remove item from specific bag/slot

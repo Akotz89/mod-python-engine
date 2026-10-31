@@ -1,10 +1,13 @@
 #include "PythonHeaders.h"
+#include "PythonBorrowed.h"
 #include "SpellInfo.h"
 #include "Spell.h"
 #include "Corpse.h"
 #include "Item.h"
 
 namespace bp = boost::python;
+using PyEng::Bridge::BorrowedPolicy;
+using PyEng::Bridge::RegisterBorrowedType;
 
 /**
  * @brief SpellInfo Class - Contains static spell database information
@@ -12,31 +15,47 @@ namespace bp = boost::python;
 void export_spellinfo_class()
 {
     bp::class_<SpellInfo> spellinfo_class("SpellInfo", bp::no_init);
+    RegisterBorrowedType<SpellInfo>(spellinfo_class);
 
     // data value
-    spellinfo_class.def_readonly("Id", &SpellInfo::Id);
-    spellinfo_class.def_readonly("SpellName", &SpellInfo::SpellName);
-    spellinfo_class.def_readonly("Rank", &SpellInfo::Rank);
-    spellinfo_class.def_readonly("SchoolMask", &SpellInfo::SchoolMask);
-    spellinfo_class.def_readonly("DmgClass", &SpellInfo::DmgClass);
-    spellinfo_class.def_readonly("Dispel", &SpellInfo::Dispel);
-    spellinfo_class.def_readonly("Mechanic", &SpellInfo::Mechanic);
-    spellinfo_class.def_readonly("ManaCost", &SpellInfo::ManaCost);
-    spellinfo_class.def_readonly("ManaCostPercentage", &SpellInfo::ManaCostPercentage);
-    spellinfo_class.def_readonly("PowerType", &SpellInfo::PowerType);
-    spellinfo_class.def_readonly("RecoveryTime", &SpellInfo::RecoveryTime);
-    spellinfo_class.def_readonly("CategoryRecoveryTime", &SpellInfo::CategoryRecoveryTime);
-    spellinfo_class.def_readonly("StackAmount", &SpellInfo::StackAmount);
+    spellinfo_class.add_property("Id", bp::make_getter(&SpellInfo::Id, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("SpellName", bp::make_function(+[](SpellInfo const& info)
+    {
+        bp::list values;
+        for (char const* text : info.SpellName)
+            values.append(text ? text : "");
+        return bp::tuple(values);
+    }, BorrowedPolicy<>()));
+    spellinfo_class.add_property("Rank", bp::make_function(+[](SpellInfo const& info)
+    {
+        bp::list values;
+        for (char const* text : info.Rank)
+            values.append(text ? text : "");
+        return bp::tuple(values);
+    }, BorrowedPolicy<>()));
+    spellinfo_class.add_property("SchoolMask", bp::make_getter(&SpellInfo::SchoolMask, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("DmgClass", bp::make_getter(&SpellInfo::DmgClass, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("Dispel", bp::make_getter(&SpellInfo::Dispel, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("Mechanic", bp::make_getter(&SpellInfo::Mechanic, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("ManaCost", bp::make_getter(&SpellInfo::ManaCost, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("ManaCostPercentage", bp::make_getter(&SpellInfo::ManaCostPercentage, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("PowerType", bp::make_getter(&SpellInfo::PowerType, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("RecoveryTime", bp::make_getter(&SpellInfo::RecoveryTime, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("CategoryRecoveryTime", bp::make_getter(&SpellInfo::CategoryRecoveryTime, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    spellinfo_class.add_property("StackAmount", bp::make_getter(&SpellInfo::StackAmount, BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
 
     // type checks
-    spellinfo_class.def("IsPassive", &SpellInfo::IsPassive);
-    spellinfo_class.def("IsChanneled", &SpellInfo::IsChanneled);
-    spellinfo_class.def("IsPositive", &SpellInfo::IsPositive);
+    spellinfo_class.def("IsPassive", &SpellInfo::IsPassive, BorrowedPolicy<>());
+    spellinfo_class.def("IsChanneled", &SpellInfo::IsChanneled, BorrowedPolicy<>());
+    spellinfo_class.def("IsPositive", &SpellInfo::IsPositive, BorrowedPolicy<>());
 
     // helpers
-    spellinfo_class.def("GetDuration", &SpellInfo::GetDuration);
-    spellinfo_class.def("GetMaxRange", &SpellInfo::GetMaxRange);
-    spellinfo_class.def("CalcCastTime", &SpellInfo::CalcCastTime);
+    spellinfo_class.def("GetDuration", &SpellInfo::GetDuration, BorrowedPolicy<>());
+    spellinfo_class.def("GetMaxRange", &SpellInfo::GetMaxRange, BorrowedPolicy<>(),
+                        (bp::arg("positive") = false, bp::arg("caster") = bp::object(),
+                         bp::arg("spell") = bp::object()));
+    spellinfo_class.def("CalcCastTime", &SpellInfo::CalcCastTime, BorrowedPolicy<>(),
+                        (bp::arg("caster") = bp::object(), bp::arg("spell") = bp::object()));
 }
 
 /**
@@ -45,20 +64,21 @@ void export_spellinfo_class()
 void export_spellcast_targets_class()
 {
     bp::class_<SpellCastTargets> spellcast_targets_class("SpellCastTargets", bp::no_init);
+    RegisterBorrowedType<SpellCastTargets>(spellcast_targets_class, true);
 
     // target ref
     spellcast_targets_class.def("GetUnitTarget", &SpellCastTargets::GetUnitTarget,
-                                bp::return_value_policy<bp::reference_existing_object>());
+                                BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
     spellcast_targets_class.def("GetObjectTarget", &SpellCastTargets::GetObjectTarget,
-                                bp::return_value_policy<bp::reference_existing_object>());
+                                BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
     spellcast_targets_class.def("GetCorpseTarget", &SpellCastTargets::GetCorpseTarget,
-                                bp::return_value_policy<bp::reference_existing_object>());
+                                BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
     spellcast_targets_class.def("GetItemTarget", &SpellCastTargets::GetItemTarget,
-                                bp::return_value_policy<bp::reference_existing_object>());
+                                BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
 
     // target guid
-    spellcast_targets_class.def("GetUnitTargetGUID", &SpellCastTargets::GetUnitTargetGUID);
-    spellcast_targets_class.def("GetObjectTargetGUID", &SpellCastTargets::GetObjectTargetGUID);
-    spellcast_targets_class.def("GetCorpseTargetGUID", &SpellCastTargets::GetCorpseTargetGUID);
-    spellcast_targets_class.def("GetItemTargetGUID", &SpellCastTargets::GetItemTargetGUID);
+    spellcast_targets_class.def("GetUnitTargetGUID", &SpellCastTargets::GetUnitTargetGUID, BorrowedPolicy<>());
+    spellcast_targets_class.def("GetObjectTargetGUID", &SpellCastTargets::GetObjectTargetGUID, BorrowedPolicy<>());
+    spellcast_targets_class.def("GetCorpseTargetGUID", &SpellCastTargets::GetCorpseTargetGUID, BorrowedPolicy<>());
+    spellcast_targets_class.def("GetItemTargetGUID", &SpellCastTargets::GetItemTargetGUID, BorrowedPolicy<>());
 }

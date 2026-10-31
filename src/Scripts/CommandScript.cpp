@@ -13,20 +13,11 @@ public:
 
     ChatCommandTable GetCommands() const override
     {
-        static ChatCommandTable pythonCommandTable = []
-        {
-            ChatCommandTable commands = {
-                { "status", HandlePythonStatusCommand, SEC_ADMINISTRATOR, Console::Yes },
-                { "reload", HandlePythonReloadCommand, SEC_ADMINISTRATOR, Console::Yes }
-            };
-
-            // Do not expose administrative exec at all in the default profile.
-            // The command appears only when both unsafe development and the
-            // separate exec switch passed their initialization gates.
-            if (sPythonEngine->IsUnsafeDevelopmentProfile() && sPythonEngine->IsExecCommandAllowed())
-                commands.push_back({ "exec", HandlePythonExecCommand, SEC_ADMINISTRATOR, Console::Yes });
-            return commands;
-        }();
+        static ChatCommandTable pythonCommandTable = {
+            { "status", HandlePythonStatusCommand, SEC_ADMINISTRATOR, Console::Yes },
+            { "reload", HandlePythonReloadCommand, SEC_ADMINISTRATOR, Console::Yes },
+            { "exec", HandlePythonExecCommand, SEC_ADMINISTRATOR, Console::Yes }
+        };
 
         static ChatCommandTable commandTable = {
             { "python", pythonCommandTable }
@@ -45,7 +36,7 @@ public:
         }
 
         handler->PSendSysMessage("Python Engine: {}", sPythonEngine->IsBusy() ? "Busy" : "Ready");
-        handler->PSendSysMessage("Capability Profile: {}", sPythonEngine->GetCapabilityProfileName());
+        handler->SendSysMessage("API: general-purpose embedded Python");
         handler->PSendSysMessage("Reloading: {}", sPythonEngine->IsReloading() ? "Yes" : "No");
         handler->PSendSysMessage("Configured Scripts Path: {}", sConfigMgr->GetOption<std::string>("Python.ScriptsPath", ""));
 
@@ -67,12 +58,14 @@ public:
             return false;
         }
 
+        struct ReloadGuard
+        {
+            ~ReloadGuard() { sPythonEngine->EndReload(); }
+        } reloadGuard;
+
         handler->SendSysMessage("Reloading Python scripts...");
 
         bool success = sPythonEngine->LoadScripts();
-
-        // End reload (atomically clear reloading flag)
-        sPythonEngine->EndReload();
 
         if (!success)
         {
@@ -87,19 +80,13 @@ public:
 
     static bool HandlePythonExecCommand(ChatHandler* handler, char const* args)
     {
-        if (!sPythonEngine->IsExecCommandAllowed())
-        {
-            handler->SendErrorMessage("Error: Python exec command is disabled");
-            return false;
-        }
-
         if (!sPythonEngine->IsEnabled())
         {
             handler->SendErrorMessage("Error: Python Engine is disabled");
             return false;
         }
 
-        if (!*args)
+        if (!args || !*args)
         {
             handler->SendErrorMessage(LANG_CMD_SYNTAX);
             return false;

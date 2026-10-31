@@ -1,0 +1,205 @@
+#include "PythonConverter.h"
+#include "PythonGIL.h"
+#include "PythonException.h"
+#include "Adapters/UnitAdapter.h"
+#include <cassert>
+#include <set>
+#include <map>
+#include <thread>
+
+namespace bp = boost::python;
+using namespace PyEng::Bridge;
+void export_mutable_types();
+
+struct NativeTestObject
+{
+    int value = 7;
+    int Read() const { return value; }
+    void Write(int replacement) { value = replacement; }
+    NativeTestObject* Child() { return this; }
+};
+struct UnboundTestObject { int value = 3; };
+struct PacketTestObject
+{
+    int value = 4;
+    int Read() const { return value; }
+    void Write(int replacement) { value = replacement; }
+};
+
+BOOST_PYTHON_MODULE(binding_test)
+{
+    export_mutable_types();
+    bp::class_<NativeTestObject, boost::noncopyable> native("Native", bp::no_init);
+    RegisterBorrowedType<NativeTestObject>(native, true);
+    native.def("read", &NativeTestObject::Read, BorrowedPolicy<>());
+    native.def("write", &NativeTestObject::Write, BorrowedPolicy<>());
+    native.def("child", &NativeTestObject::Child,
+        BorrowedPolicy<bp::return_value_policy<bp::reference_existing_object>>());
+    native.add_property("value", bp::make_getter(&NativeTestObject::value,
+        BorrowedPolicy<bp::return_value_policy<bp::return_by_value>>()));
+    bp::class_<PacketTestObject, boost::noncopyable> packet("Packet", bp::no_init);
+    RegisterBorrowedType<PacketTestObject>(packet);
+    packet.def("read", &PacketTestObject::Read, BorrowedPolicy<>());
+    packet.def("write", &PacketTestObject::Write, BorrowedPolicy<>());
+}
+
+void Exec(char const* script, bp::dict& globals)
+{
+    bp::exec(script, globals, globals);
+}
+
+int main()
+{
+    assert(PyImport_AppendInittab("binding_test", PyInit_binding_test) == 0);
+    Py_Initialize();
+    try
+    {
+        {
+            bp::dict globals;
+            globals["__builtins__"] = bp::import("builtins");
+            globals["__name__"] = "__main__";
+            bp::import("binding_test");
+            NativeTestObject native;
+            UnboundTestObject opaque;
+            int32 number = 1;
+            std::string text = "old";
+            std::set<uint32> values{1, 2};
+            std::map<uint32, uint32> mapping{{1, 2}};
+            UnboundTestObject* output = &opaque;
+            {
+                CallbackScope scope;
+                globals["native"] = Converter::ToPython(&native);
+                globals["const_native"] = Converter::ToPython(static_cast<NativeTestObject const*>(&native));
+                globals["number"] = Converter::ToPython(std::ref(number));
+                globals["text"] = Converter::ToPython(std::ref(text));
+                globals["values"] = Converter::ToPython(std::ref(values));
+                globals["opaque"] = Converter::ToPython(&opaque);
+                globals["output"] = Converter::ToPython(std::ref(output));
+                globals["mapping"] = Converter::ToPython(std::ref(mapping));
+                Exec("assert native.read() == 7\nassert native.value == 7\nassert const_native.read() == 7\n"
+                     "child = native.child()\nassert child.read() == 7\n"
+                     "number.set(42)\ntext.set('new')\nvalues.set([3, 4])\n"
+                     "assert opaque.IsValid()\noutput.set(None)\nmapping.set({3: 4})\n", globals);
+                {
+                    CallbackScope nested;
+                    Exec("assert native.read() == 7\n", globals);
+                }
+                try
+                {
+                    Exec("class BrokenMessage(Exception):\n def __str__(self):\n  raise ValueError('format failure')\nraise BrokenMessage()\n", globals);
+                    assert(false);
+                }
+                catch (bp::error_already_set const&)
+                {
+                    auto error = ExceptionHandler::FormatException();
+                    assert(error.find("BrokenMessage") != std::string::npos);
+                    assert(!PyErr_Occurred());
+                }
+                Exec("assert native.read() == 7\n", globals);
+                // Background Python may run while a callback yields, but cannot touch its native objects.
+                PyThreadState* threadState = PyEval_SaveThread();
+                std::thread worker([&globals]
+                {
+                    GILGuard gil;
+                    Exec("try:\n native.read()\nexcept RuntimeError:\n pass\nelse:\n raise AssertionError('cross-thread reference accepted')\n", globals);
+                });
+                worker.join();
+                PyEval_RestoreThread(threadState);
+                InvalidateBorrowedPointer(&native);
+                Exec("try:\n child.read()\nexcept ReferenceError:\n pass\nelse:\n raise AssertionError('removed native reference accepted')\n", globals);
+            }
+            assert(number == 42 && text == "new" && values == std::set<uint32>({3, 4}));
+            assert(output == nullptr && mapping.at(3) == 4 && mapping.size() == 1);
+            Exec("for value in (native, child):\n try:\n  value.read()\n except ReferenceError:\n  pass\n else:\n  raise AssertionError('expired native accepted')\n"
+                 "for value in (number, text, values):\n try:\n  value.get()\n except ReferenceError:\n  pass\n else:\n  raise AssertionError('expired mutable reference accepted')\n"
+                 "assert not opaque.IsValid()\ntry:\n opaque.GetTypeName()\nexcept ReferenceError:\n pass\nelse:\n raise AssertionError('expired opaque reference accepted')\n", globals);
+            // Enum refs use a typed copied value instead of aliasing enum storage as an integer.
+            enum class TestEnum : uint8 { A = 1, B = 2 };
+            TestEnum enumeration = TestEnum::A;
+            {
+                CallbackScope scope;
+                globals["enumeration"] = Converter::ToPython(std::ref(enumeration));
+                Exec("enumeration.set(2)\n", globals);
+            }
+            assert(enumeration == TestEnum::B);
+            Powers power = POWER_MANA;
+            ServerSideVisibilityType visibility = SERVERSIDE_VISIBILITY_GM;
+            float amount = 1.0f;
+            {
+                CallbackScope scope;
+                globals["power"] = Converter::ToPython(std::ref(power));
+                globals["visibility"] = Converter::ToPython(std::ref(visibility));
+                globals["amount"] = Converter::ToPython(std::ref(amount));
+                Exec("for value, replacement in ((power, 999), (visibility, 999), (visibility, -1), (amount, float('nan')), (amount, float('inf'))):\n"
+                     " try:\n  value.set(replacement)\n except (ValueError, OverflowError):\n  pass\n else:\n  raise AssertionError('invalid native value accepted')\n", globals);
+            }
+            assert(power == POWER_MANA && visibility == SERVERSIDE_VISIBILITY_GM && amount == 1.0f);
+            PyEng::UnitAdapter::CheckPower(POWER_RUNIC_POWER);
+            try
+            {
+                PyEng::UnitAdapter::CheckPower(static_cast<Powers>(999));
+                assert(false);
+            }
+            catch (std::out_of_range const&) {}
+            PacketTestObject packet;
+            {
+                CallbackScope gameScope;
+                globals["game_object"] = Converter::ToPython(&native);
+                {
+                    CallbackScope networkScope(false);
+                    globals["packet"] = Converter::ToPython(&packet);
+                    Exec("packet.write(9)\nassert packet.read() == 9\n"
+                         "try:\n game_object.read()\nexcept RuntimeError:\n pass\nelse:\n raise AssertionError('network callback touched game state')\n", globals);
+                    try
+                    {
+                        Converter::ToPython(&native);
+                        assert(false);
+                    }
+                    catch (bp::error_already_set const&)
+                    {
+                        assert(PyErr_ExceptionMatches(PyExc_RuntimeError));
+                        PyErr_Clear();
+                    }
+                }
+                Exec("assert game_object.read() == 7\n", globals);
+            }
+            assert(packet.value == 9);
+            // A later owner-thread dispatch resolves a fresh native handle instead of reusing the packet callback's lease.
+            {
+                CallbackScope scheduledWorldScope;
+                globals["fresh_game_object"] = Converter::ToPython(&native);
+                Exec("assert fresh_game_object.read() == 7\n", globals);
+            }
+            PyThreadState* ownerState = PyEval_SaveThread();
+            bool mapCallbackPassed = false;
+            std::thread mapOwner([&]
+            {
+                GILGuard gil;
+                try
+                {
+                    CallbackScope nativeMapScope;
+                    bp::dict mapGlobals;
+                    mapGlobals["__builtins__"] = bp::import("builtins");
+                    mapGlobals["map_actor"] = Converter::ToPython(&native);
+                    Exec("map_actor.write(8)\nassert map_actor.read() == 8\n", mapGlobals);
+                    mapCallbackPassed = true;
+                }
+                catch (bp::error_already_set const&)
+                {
+                    PyErr_Print();
+                }
+            });
+            mapOwner.join();
+            PyEval_RestoreThread(ownerState);
+            assert(mapCallbackPassed && native.value == 8);
+            assert(API::IsNone(Converter::ToPython(static_cast<char const*>(nullptr))));
+        }
+        ClearBorrowedReferences();
+    }
+    catch (bp::error_already_set const&)
+    {
+        PyErr_Print();
+        return 1;
+    }
+    return Py_FinalizeEx() < 0 ? 1 : 0;
+}

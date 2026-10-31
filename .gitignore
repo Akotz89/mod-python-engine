@@ -12,6 +12,8 @@
 .hg/
 *.kdev*
 .DS_Store
+__pycache__/
+*.py[cod]
 CMakeLists.txt.user
 *.bak
 *.patch

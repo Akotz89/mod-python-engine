@@ -1,5 +1,6 @@
 #include "PythonHeaders.h"
 #include "PythonMutable.h"
+#include "PythonConverter.h"
 
 namespace bp = boost::python;
 using namespace PyEng::Bridge;
@@ -33,4 +34,12 @@ void export_mutable_types()
     register_mutable_type<float>("FloatRef", "__float__");
     register_mutable_type<double>("DoubleRef", "__float__");
     register_mutable_type<bool>("BoolRef", "__bool__");
+    register_mutable_type<std::string>("StringRef", "__str__");
+    bp::class_<MutableValue>("MutableValue", bp::no_init)
+        .def("get", &MutableValue::get)
+        .def("set", &MutableValue::set);
+    bp::class_<NativeReference>("NativeReference", bp::no_init)
+        .def("GetTypeName", &NativeReference::GetTypeName)
+        .def("IsValid", &NativeReference::IsValid)
+        .def("__repr__", &NativeReference::repr);
 }

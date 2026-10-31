@@ -1,114 +1,67 @@
 #include "HookMacros.h"
+#include "PythonBorrowed.h"
 #include "ScriptMgr.h"
 #include "Player.h"
+#include "Creature.h"
+#include "GameObject.h"
 #include "Spell.h"
+#include "Item.h"
+#include "ArenaTeam.h"
+#include "Battleground.h"
+#include "AchievementMgr.h"
+#include "WorldSession.h"
+#include "WorldSocket.h"
+#include "Map.h"
+#include "Guild.h"
+#include "Group.h"
+#include "Channel.h"
+#include "Pet.h"
+#include "ObjectMgr.h"
+#include "LootMgr.h"
+#include "SpellAuraEffects.h"
 
-class PythonItemScript : public ItemScript
+class PythonItemScript : public AllItemScript
 {
 public:
-    PythonItemScript() : ItemScript("PythonItemScript") {}
+    PythonItemScript() : AllItemScript("PythonItemScript") {}
 
-    /**
-     * @brief Disable database binding requirement and suppress errors like:
-     * Script named '<PythonEntityScript>' is not assigned in the database.
-     *
-     * @todo should use AllItemScript instead?
-     */
-    bool IsDatabaseBound() const override { return false; }
-
-    /**
-     * @brief Called when a player accepts a quest from the item
-     *
-     * @param player Contains information about the Player
-     * @param item Contains information about the Item
-     * @param quest Contains information about the Quest
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnQuestAccept(Player* player, Item* item, Quest const* quest) override
+    bool OnItemQuestAccept(Player* player, Item* item, Quest const* quest) override
     {
-        TRIGGER_ITEM_HOOK(ON_QUEST_ACCEPT, item->GetEntry(), player, item, quest);
-        return false;
+        return TRIGGER_ITEM_HOOK_RESULT(ON_QUEST_ACCEPT, item->GetEntry(), false, player, item, quest);
     }
 
-    /**
-     * @brief Called when a player uses the item
-     *
-     * @param player Contains information about the Player
-     * @param item Contains information about the Item
-     * @param targets Contains information about the SpellCastTargets
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnUse(Player* player, Item* item, SpellCastTargets const& targets) override
+    bool CanItemUse(Player* player, Item* item, SpellCastTargets const& targets) override
     {
-        TRIGGER_ITEM_HOOK(ON_USE, item->GetEntry(), player, item, targets);
-        return false;
+        return TRIGGER_ITEM_HOOK_RESULT(ON_USE, item->GetEntry(), false, player, item, targets);
     }
 
-    /**
-     * @brief Called when the item is destroyed
-     *
-     * @param player Contains information about the Player
-     * @param item Contains information about the Item
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnRemove(Player* player, Item* item) override
+    bool OnItemExpire(Player* player, ItemTemplate const* proto) override
     {
-        TRIGGER_ITEM_HOOK(ON_REMOVE, item->GetEntry(), player, item);
-        return false;
+        return TRIGGER_ITEM_HOOK_RESULT(ON_EXPIRE, proto->ItemId, false, player, proto);
     }
 
-    /**
-     * @brief Called before casting a combat spell from this item (chance on hit
-     * spells of item template, can be used to prevent cast if returning false)
-     *
-     * @param player Contains information about the Player
-     * @param victim Contains information about the victim Unit
-     * @param spellInfo Contains information about the SpellInfo
-     * @param item Contains information about the Item
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnCastItemCombatSpell(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item) override
+    bool OnItemRemove(Player* player, Item* item) override
     {
-        TRIGGER_ITEM_HOOK(ON_CAST_COMBAT_SPELL, item->GetEntry(), player, victim, spellInfo, item);
-        return true;
+        bool handled = TRIGGER_ITEM_HOOK_RESULT(ON_REMOVE, item->GetEntry(), false, player, item);
+        if (Py_IsInitialized())
+        {
+            PyEng::Bridge::GILGuard gil;
+            PyEng::Bridge::InvalidateBorrowedPointer(item);
+        }
+        return handled;
     }
 
-    /**
-     * @brief Called when the item expires (is destroyed)
-     *
-     * @param player Contains information about the Player
-     * @param proto Contains information about the ItemTemplate
-     * @return False if you want to continue, true if you want to disable
-     */
-    bool OnExpire(Player* player, ItemTemplate const* proto) override
+    bool CanItemCastCombatSpell(Player* player, Unit* victim, SpellInfo const* spellInfo, Item* item) override
     {
-        TRIGGER_ITEM_HOOK(ON_EXPIRE, proto->ItemId, player, proto);
-        return false;
+        return TRIGGER_ITEM_HOOK_RESULT(ON_CAST_COMBAT_SPELL, item->GetEntry(), true, player, victim, spellInfo, item);
     }
 
-    /**
-     * @brief Called when a player selects an option in an item gossip window
-     *
-     * @param player Contains information about the Player
-     * @param item Contains information about the Item
-     * @param sender Contains information about the sender type
-     * @param action Contains information about the action id
-     */
-    void OnGossipSelect(Player* player, Item* item, uint32 sender, uint32 action) override
+    void OnItemGossipSelect(Player* player, Item* item, uint32 sender, uint32 action) override
     {
         TRIGGER_ITEM_HOOK(ON_GOSSIPE_SELECT, item->GetEntry(), player, item, sender, action);
     }
 
-    /**
-     * @brief Called when a player selects an option in an item gossip window
-     *
-     * @param player Contains information about the Player
-     * @param item Contains information about the Item
-     * @param sender Contains information about the sender type
-     * @param action Contains information about the action id
-     * @param code Contains information about the code entered
-     */
-    void OnGossipSelectCode(Player* player, Item* item, uint32 sender, uint32 action, char const* code) override
+    void OnItemGossipSelectCode(Player* player, Item* item, uint32 sender, uint32 action, char const* code) override
     {
         TRIGGER_ITEM_HOOK(ON_GOSSIPE_SELECT_CODE, item->GetEntry(), player, item, sender, action, code);
     }
